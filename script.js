@@ -89,7 +89,6 @@ currencyPairSelect.addEventListener('change', () => {
     updateTradeSizeLabel();
 });
 
-
 // --- Margin Calculator Logic ---
 async function calculateMargin() {
     hideMessage();
@@ -144,8 +143,6 @@ async function calculateMargin() {
 // --- Position Size & Risk/Reward Logic ---
 function calculateRiskRewardAndPosition() {
     hideMessage();
-    resultArea.style.display = 'none';
-    
     const capital = parseFloat(capitalInput.value);
     const riskPercent = parseFloat(riskPercentSlider.value);
     const entryPrice = parseFloat(entryPriceInput.value);
