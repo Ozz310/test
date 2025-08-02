@@ -27,7 +27,7 @@ const capitalInput = document.getElementById('capital');
 const riskPercentInput = document.getElementById('riskPercent');
 const instrumentRRSelect = document.getElementById('instrumentRR');
 const entryPriceInput = document.getElementById('entryPrice');
-const stopLossPriceInput = document = document.getElementById('stopLossPrice');
+const stopLossPriceInput = document.getElementById('stopLossPrice');
 const takeProfitPriceInput = document.getElementById('takeProfitPrice');
 const riskAmountDisplay = document.getElementById('riskAmountDisplay');
 const stopLossPipsDisplay = document.getElementById('stopLossPipsDisplay');
@@ -35,11 +35,9 @@ const recommendedUnitsDisplay = document.getElementById('recommendedUnitsDisplay
 const rrRatioDisplay = document.getElementById('rrRatioDisplay');
 
 // All result card elements for easy reset
-const resultCards = [
-    ratePairDisplay, currentRateDisplay, requiredMarginDisplay, marginCurrencySymbol,
-    pipValueDisplay, pipValueCurrencySymbol, riskAmountDisplay, stopLossPipsDisplay,
-    recommendedUnitsDisplay, rrRatioDisplay
-];
+const allResultCards = document.querySelectorAll('.result-card');
+const marginCards = document.querySelectorAll('#cardMarginRate, #cardMarginRequired, #cardMarginPip');
+const rrCards = document.querySelectorAll('#cardRRRisk, #cardRRStopLoss, #cardRRUnits, #cardRRRatio');
 
 // --- Event Listeners ---
 window.onload = () => {
@@ -56,6 +54,7 @@ function showMessage(message, type = 'info') {
     messageText.textContent = message;
     messageBox.classList.add('show');
     messageBox.style.backgroundColor = (type === 'error') ? '#d32f2f' : '#333';
+    allResultCards.forEach(card => card.classList.remove('success-border'));
 }
 
 function hideMessage() {
@@ -71,6 +70,7 @@ function hideLoading(spinner) {
 }
 
 function resetResults() {
+    allResultCards.forEach(card => card.classList.remove('success-border'));
     ratePairDisplay.textContent = 'N/A';
     currentRateDisplay.textContent = 'N/A';
     timestampMargin.textContent = '';
@@ -295,6 +295,11 @@ async function calculateMargin() {
         pipValueDisplay.textContent = valueLabel;
         pipValueCurrencySymbol.textContent = '';
     }
+    
+    // Add gold shadow to Margin cards
+    document.getElementById('cardMarginRate').classList.add('success-border');
+    document.getElementById('cardMarginRequired').classList.add('success-border');
+    document.getElementById('cardMarginPip').classList.add('success-border');
 
     hideLoading(loadingSpinnerMargin);
 }
@@ -352,17 +357,14 @@ function calculateRiskRewardAndPosition() {
     const priceDifference = Math.abs(entryPrice - stopLossPrice);
     const stopLossPips = priceDifference / pipSize;
     
-    // Calculate Pip Value in Quote Currency
-    const pipValueInQuoteCurrency = (assetType === 'forex') ? 10 : 1;
-    const pipValuePerPoint = (pipValueInQuoteCurrency * pipSize) / (pipSize * 10000);
-    
     // Step 3: Calculate Position Size (in units)
-    let recommendedUnits = 0;
-    if (priceDifference !== 0) {
-        const stopLossDollarValuePerUnit = priceDifference;
-        recommendedUnits = riskAmount / stopLossDollarValuePerUnit;
+    const valuePerUnit = priceDifference;
+    let recommendedUnits = riskAmount / valuePerUnit;
+
+    if (assetType === 'forex') {
+        recommendedUnits = recommendedUnits * 100000;
     }
-    
+
     // Calculate Risk/Reward Ratio
     let rrRatio = 'N/A';
     const riskDistance = Math.abs(entryPrice - stopLossPrice);
@@ -376,6 +378,12 @@ function calculateRiskRewardAndPosition() {
     stopLossPipsDisplay.textContent = `${stopLossPips.toFixed(1)} ${assetType === 'forex' ? 'pips' : 'points'}`;
     recommendedUnitsDisplay.textContent = recommendedUnits.toFixed(0);
     rrRatioDisplay.textContent = `1:${rrRatio}`;
+
+    // Add gold shadow to RR cards
+    document.getElementById('cardRRRisk').classList.add('success-border');
+    document.getElementById('cardRRStopLoss').classList.add('success-border');
+    document.getElementById('cardRRUnits').classList.add('success-border');
+    document.getElementById('cardRRRatio').classList.add('success-border');
 
     hideLoading(loadingSpinnerRR);
 }
