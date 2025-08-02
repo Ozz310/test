@@ -75,6 +75,23 @@
                     <span class="loading-spinner" id="loadingSpinnerMargin"></span>
                     Calculate Margin
                 </button>
+                <div class="margin-results-area" id="marginResultsArea">
+                    <div class="results-grid">
+                        <div class="result-card">
+                            <p>Current Rate (<span id="ratePairDisplay">EUR/USD</span>):</p>
+                            <span id="currentRateDisplay">N/A</span>
+                            <p class="timestamp" id="timestampMargin"></p>
+                        </div>
+                        <div class="result-card">
+                            <p>Required Margin:</p>
+                            <span id="requiredMarginDisplay">N/A</span> <span id="marginCurrencySymbol"></span>
+                        </div>
+                        <div class="result-card">
+                            <p>Pip/Point Value:</p>
+                            <span id="pipValueDisplay">N/A</span> <span id="pipValueCurrencySymbol"></span>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div class="calculator-container">
@@ -129,6 +146,26 @@
                     <span class="loading-spinner" id="loadingSpinnerRR"></span>
                     Calculate Risk/Reward & Position
                 </button>
+                <div class="rr-results-area" id="rrResultsArea">
+                    <div class="results-grid">
+                        <div class="result-card">
+                            <p>Risk Amount:</p>
+                            <span id="riskAmountDisplay">N/A</span>
+                        </div>
+                        <div class="result-card">
+                            <p>Stop Loss (Pips/Points):</p>
+                            <span id="stopLossPipsDisplay">N/A</span>
+                        </div>
+                        <div class="result-card">
+                            <p>Recommended Units:</p>
+                            <span id="recommendedUnitsDisplay">N/A</span>
+                        </div>
+                        <div class="result-card">
+                            <p>Risk/Reward Ratio:</p>
+                            <span id="rrRatioDisplay">N/A</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -137,40 +174,6 @@
             <button class="message-box-close" onclick="hideMessage()">&times;</button>
         </div>
         
-        <div class="result-area" id="resultArea">
-            <h3 class="result-title">Calculation Results</h3>
-            <div class="results-grid">
-                <div class="result-card">
-                    <p>Current Rate (<span id="ratePairDisplay">EUR/USD</span>):</p>
-                    <span id="currentRateDisplay">Fetching...</span>
-                </div>
-                <div class="result-card">
-                    <p>Required Margin:</p>
-                    <span id="requiredMarginDisplay">0.00</span> <span id="marginCurrencySymbol">USD</span>
-                </div>
-                <div class="result-card">
-                    <p>Pip/Point Value:</p>
-                    <span id="pipValueDisplay">N/A</span> <span id="pipValueCurrencySymbol"></span>
-                </div>
-                <div class="result-card">
-                    <p>Risk Amount:</p>
-                    <span id="riskAmountDisplay">N/A</span>
-                </div>
-                <div class="result-card">
-                    <p>Stop Loss (Pips/Points):</p>
-                    <span id="stopLossPipsDisplay">N/A</span>
-                </div>
-                <div class="result-card">
-                    <p>Recommended Units:</p>
-                    <span id="recommendedUnitsDisplay">N/A</span>
-                </div>
-                <div class="result-card">
-                    <p>Risk/Reward Ratio:</p>
-                    <span id="rrRatioDisplay">N/A</span>
-                </div>
-            </div>
-        </div>
-
         <div class="branding">
             <div class="branding-divider"></div>
             <img src="https://raw.githubusercontent.com/Ozz310/TradersGazette/refs/heads/main/calculator/WhatsApp%20Image%202025-06-18%20at%2011.37.15%20(1).jpeg" alt="The Traders Gazette Logo">
