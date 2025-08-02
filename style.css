@@ -30,30 +30,29 @@ body::before {
     z-index: -1;
 }
 
-.main-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    box-sizing: border-box;
+.main-widget-container {
+    background-color: #2a2a2a;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(240, 215, 136, 0.1);
     width: 100%;
-}
-
-.header-container {
-    text-align: center;
-    margin-bottom: 30px;
+    max-width: 1000px;
+    box-sizing: border-box;
+    z-index: 1;
 }
 
 .header-title {
     font-size: 2.5rem;
     font-weight: 700;
     color: #F0D788;
+    text-align: center;
+    margin-bottom: 30px;
 }
 
 .calculators-grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: 30px;
-    margin-bottom: 20px;
 }
 
 @media (min-width: 768px) {
@@ -63,10 +62,10 @@ body::before {
 }
 
 .calculator-container {
-    background-color: #2a2a2a;
+    background-color: #333; /* Slightly lighter background for inner calculators */
     padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(240, 215, 136, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     border: 1px solid #4a4a4a;
 }
 
@@ -86,7 +85,7 @@ body::before {
     color: #b0b0b0;
     margin-bottom: 20px;
     padding: 10px;
-    background-color: #333;
+    background-color: #4a4a4a; /* Adjusted background color */
     border-radius: 8px;
 }
 .calculator-info img {
@@ -111,7 +110,7 @@ input[type="number"], select {
     padding: 12px;
     border: 1px solid #555;
     border-radius: 8px;
-    background-color: #3a3a3a;
+    background-color: #4a4a4a;
     color: #f0f0f0;
     font-size: 1rem;
     box-sizing: border-box;
@@ -154,7 +153,7 @@ button:hover {
     color: #fff;
     padding: 15px;
     border-radius: 8px;
-    margin-top: 20px;
+    margin-top: 30px;
     display: none;
     align-items: center;
     justify-content: space-between;
@@ -244,7 +243,6 @@ button:hover {
 .branding {
     margin-top: 25px;
     padding-top: 20px;
-    border-top: 1px dashed #4a4a4a;
     text-align: center;
     color: #b0b0b0;
     font-size: 0.85rem;
@@ -252,6 +250,13 @@ button:hover {
     flex-direction: column;
     align-items: center;
     gap: 10px;
+}
+
+.branding-divider {
+    width: 100%;
+    height: 1px;
+    background-color: #4a4a4a;
+    margin-bottom: 20px;
 }
 
 .branding img {
@@ -266,8 +271,8 @@ button:hover {
 }
 
 @media (max-width: 600px) {
-    .main-container {
-        padding: 10px;
+    .main-widget-container {
+        padding: 20px;
     }
     .header-title {
         font-size: 2rem;
@@ -277,8 +282,5 @@ button:hover {
     }
     .results-grid {
         grid-template-columns: 1fr;
-    }
-    .result-area {
-        padding: 20px;
     }
 }
