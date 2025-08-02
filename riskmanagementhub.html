@@ -20,7 +20,7 @@
         <div class="two-column-layout">
             <div class="calculator-section margin-calc">
                 <h2 class="text-xl font-bold mb-4" style="color: #F0D788;">1. Margin Calculator</h2>
-                <p class="api-note"><i class="fas fa-info-circle"></i> This section uses an external API.</p>
+                <p class="api-note"><i class="fas fa-info-circle"></i> Rate updates daily (non-live) on the free plan.</p>
                 <div class="input-group">
                     <label for="accountCurrency">Account Currency:</label>
                     <select id="accountCurrency">
@@ -50,41 +50,21 @@
                     <label for="currencyPair">Instrument:</label>
                     <select id="currencyPair">
                         <optgroup label="Forex (Major)">
-                            <option value="EURUSD">EUR/USD</option>
-                            <option value="GBPUSD">GBP/USD</option>
-                            <option value="USDJPY">USD/JPY</option>
-                            <option value="AUDUSD">AUD/USD</option>
-                            <option value="USDCAD">USD/CAD</option>
-                            <option value="USDCHF">USD/CHF</option>
-                            <option value="NZDUSD">NZD/USD</option>
+                            <option value="EUR/USD">EUR/USD</option>
+                            <option value="GBP/USD">GBP/USD</option>
+                            <option value="USD/JPY">USD/JPY</option>
+                            <option value="AUD/USD">AUD/USD</option>
+                            <option value="USD/CAD">USD/CAD</option>
+                            <option value="USD/CHF">USD/CHF</option>
+                            <option value="NZD/USD">NZD/USD</option>
                         </optgroup>
                         <optgroup label="Forex (Crosses)">
-                            <option value="EURGBP">EUR/GBP</option>
-                            <option value="EURJPY">EUR/JPY</option>
-                            <option value="GBPJPY">GBP/JPY</option>
-                            <option value="AUDJPY">AUD/JPY</option>
-                            <option value="EURAUD">EUR/AUD</option>
-                            <option value="CADJPY">CAD/JPY</option>
-                        </optgroup>
-                        <optgroup label="Metals">
-                            <option value="XAUUSD">XAU/USD (Gold)</option>
-                            <option value="XAGUSD">XAG/USD (Silver)</option>
-                        </optgroup>
-                        <optgroup label="Stocks (CFDs - Example)">
-                            <option value="AAPL">AAPL (Apple Inc)</option>
-                            <option value="TSLA">TSLA (Tesla Inc)</option>
-                            <option value="GOOGL">GOOGL (Alphabet Inc)</option>
-                        </optgroup>
-                        <optgroup label="Indices (CFDs - Example)">
-                            <option value="US30">US30 (Dow Jones)</option>
-                            <option value="SPX500">SPX500 (S&P 500)</option>
-                            <option value="NAS100">NAS100 (Nasdaq 100)</option>
-                            <option value="UK100">UK100 (FTSE 100)</option>
-                        </optgroup>
-                        <optgroup label="Cryptocurrencies (CFDs - Example)">
-                            <option value="BTCUSD">BTC/USD (Bitcoin)</option>
-                            <option value="ETHUSD">ETH/USD (Ethereum)</option>
-                            <option value="XRPUSD">XRP/USD (Ripple)</option>
+                            <option value="EUR/GBP">EUR/GBP</option>
+                            <option value="EUR/JPY">EUR/JPY</option>
+                            <option value="GBP/JPY">GBP/JPY</option>
+                            <option value="AUD/JPY">AUD/JPY</option>
+                            <option value="EUR/AUD">EUR/AUD</option>
+                            <option value="CAD/JPY">CAD/JPY</option>
                         </optgroup>
                     </select>
                 </div>
@@ -92,18 +72,21 @@
                     <label for="tradeSize" id="tradeSizeLabel">Trade Size (Units):</label>
                     <input type="number" id="tradeSize" value="100000" min="0.01" step="0.01">
                 </div>
+                <button onclick="calculateMargin()">
+                    <i class="fas fa-money-check-alt"></i> Calculate Margin
+                </button>
             </div>
 
             <div class="calculator-section risk-calc">
                 <h2 class="text-xl font-bold mb-4" style="color: #F0D788;">2. Position Size & R/R</h2>
-                <p class="api-note"><i class="fas fa-info-circle"></i> This section works offline.</p>
+                <p class="api-note"><i class="fas fa-info-circle"></i> This tool is 100% offline.</p>
                 <div class="input-group">
                     <label for="capital">Total Capital ($):</label>
                     <input type="number" id="capital" placeholder="e.g., 5000" min="1" step="any">
                 </div>
                 <div class="input-group">
-                    <label for="risk_percent">Risk Per Trade (%):</label>
-                    <input type="number" id="risk_percent" placeholder="e.g., 1 or 2" min="0.1" max="100" step="any">
+                    <label for="risk_percent_slider">Risk Per Trade (<span id="risk_percent_value">2</span>%):</label>
+                    <input type="range" id="risk_percent_slider" min="0.1" max="10" step="0.1" value="2">
                 </div>
                 <div class="input-group">
                     <label for="entry_price">Entry Price:</label>
@@ -117,19 +100,16 @@
                     <label for="take_profit_price">Take Profit Price:</label>
                     <input type="number" id="take_profit_price" placeholder="e.g., 1.26000" min="0.00001" step="any">
                 </div>
+                <button onclick="calculateRiskReward()">
+                    <i class="fas fa-chart-line"></i> Calculate R/R & Position
+                </button>
             </div>
         </div>
-
-        <button onclick="calculateAll()">
-            <span class="loading-spinner" id="loadingSpinner"></span>
-            Calculate All
-        </button>
-
-        <div class="result-area" id="resultArea">
+        
+        <div class="result-area" id="resultArea" style="display: none;">
             <h2 class="text-xl font-bold mb-4" style="color: #F0D788;">Calculation Results</h2>
             <div class="results-grid">
                 <div>
-                    <p>Current Rate: (<span id="ratePairDisplay">EUR/USD</span>): <span id="currentRateDisplay">Fetching...</span></p>
                     <p>Required Margin: <span id="requiredMarginDisplay">0.00</span> <span id="marginCurrencySymbol">USD</span></p>
                     <p>Pip/Point Value: <span id="pipValueDisplay">N/A</span> <span id="pipValueCurrencySymbol"></span></p>
                 </div>
@@ -150,145 +130,137 @@
         </div>
     </div>
     <script>
-        // --- API Keys (API-Based Margin Calculator Only) ---
-        const API_KEY = "wsgm72NBgI3iTLj64psT";
-        const API_BASE_URL = "https://marketdata.tradermade.com/api/v1/live";
+        const API_KEY = "c27c0cc562a3bfd70fff7003";
+        const API_BASE_URL = "https://v6.exchangerate-api.com/v6/";
 
-        // --- DOM Elements ---
         const accountCurrencySelect = document.getElementById('accountCurrency');
         const leverageSelect = document.getElementById('leverage');
         const currencyPairSelect = document.getElementById('currencyPair');
         const tradeSizeInput = document.getElementById('tradeSize');
         const tradeSizeLabel = document.getElementById('tradeSizeLabel');
-        const ratePairDisplay = document.getElementById('ratePairDisplay');
-        const currentRateDisplay = document.getElementById('currentRateDisplay');
         const requiredMarginDisplay = document.getElementById('requiredMarginDisplay');
         const marginCurrencySymbol = document.getElementById('marginCurrencySymbol');
-        const messageBox = document.getElementById('messageBox');
-        const messageText = document.getElementById('messageText');
-        const loadingSpinner = document.getElementById('loadingSpinner');
         const pipValueRow = document.getElementById('pipValueRow');
         const pipValueDisplay = document.getElementById('pipValueDisplay');
         const pipValueCurrencySymbol = document.getElementById('pipValueCurrencySymbol');
         const capitalInput = document.getElementById('capital');
-        const riskPercentInput = document.getElementById('risk_percent');
+        const riskPercentSlider = document.getElementById('risk_percent_slider');
+        const riskPercentValue = document.getElementById('risk_percent_value');
         const entryPriceInput = document.getElementById('entry_price');
         const stopLossPriceInput = document.getElementById('stop_loss_price');
         const takeProfitPriceInput = document.getElementById('take_profit_price');
-        const resultsArea = document.getElementById('resultArea');
-        const rrRatioDisplay = document.getElementById('rr_ratio');
-        const recommendedUnitsDisplay = document.getElementById('recommended_units');
-        const stopLossPipsDisplay = document.getElementById('stop_loss_pips');
+        const rrEntryPriceInput = document.getElementById('entry_price'); // Linked to pos size entry
+        const rrStopLossPriceInput = document.getElementById('stop_loss_price'); // Linked to pos size stop loss
+        const resultArea = document.getElementById('resultArea');
         const riskAmountDisplay = document.getElementById('risk_amount');
-
-        // --- Initial Load ---
-        window.onload = fetchAndDisplayInitialRate;
-        currencyPairSelect.addEventListener('change', () => {
-            fetchAndDisplayInitialRate();
-        });
+        const stopLossPipsDisplay = document.getElementById('stop_loss_pips');
+        const recommendedUnitsDisplay = document.getElementById('recommended_units');
+        const rrRatioDisplay = document.getElementById('rr_ratio');
+        const messageBox = document.getElementById('messageBox');
+        const messageText = document.getElementById('messageText');
         
-        // --- Message Box Functions ---
+        // --- Helper functions ---
         function showMessage(message, type = 'info') {
             messageText.textContent = message;
             messageBox.classList.add('show');
             messageBox.style.backgroundColor = (type === 'error') ? '#d32f2f' : '#333';
         }
         function hideMessage() { messageBox.classList.remove('show'); }
-        function showLoading() { loadingSpinner.classList.add('show'); }
-        function hideLoading() { loadingSpinner.classList.remove('show'); }
         
-        // --- API-Based Margin Calculator Logic ---
-        async function fetchForexRate(symbol) {
-            hideMessage();
-            showLoading();
+        function getPipPointDetails(entry, stop, symbol) {
+            let pips = Math.abs(entry - stop);
+            if (symbol.includes('JPY')) { pips = pips * 100; } 
+            else { pips = pips * 10000; }
+            return pips.toFixed(2);
+        }
+
+        function getAssetType(symbol) {
+             if (symbol.includes('/') && !symbol.startsWith('X')) { return 'forex'; }
+             return 'unknown';
+        }
+
+        async function fetchExchangeRate(base, target) {
             try {
-                const url = `${API_BASE_URL}?currency=${symbol}&api_key=${API_KEY}`;
+                const url = `${API_BASE_URL}${API_KEY}/pair/${base}/${target}`;
                 const response = await fetch(url);
                 const data = await response.json();
-                if (data.quotes && data.quotes.length > 0) {
-                    const quote = data.quotes[0];
-                    const rate = quote.bid;
-                    if (rate) {
-                        currentRateDisplay.textContent = rate.toFixed(5);
-                        return rate;
-                    } else {
-                        showMessage(`Could not find live rate for ${symbol}.`, 'error');
-                        currentRateDisplay.textContent = 'N/A';
-                        return null;
-                    }
-                } else if (data.error) {
-                    showMessage(`API Error for ${symbol}: ${data.error}`, 'error');
-                    currentRateDisplay.textContent = 'N/A';
-                    return null;
+                if (data.result === 'success') {
+                    return data.conversion_rate;
                 } else {
-                    showMessage(`No data received for ${symbol}. Check symbol or API key.`, 'error');
-                    currentRateDisplay.textContent = 'N/A';
+                    showMessage(`Could not fetch conversion rate for ${base}/${target}.`, 'error');
                     return null;
                 }
             } catch (error) {
-                console.error("Error fetching rate for", symbol, ":", error);
-                showMessage(`Failed to fetch live rate for ${symbol}. Check your internet connection or API key.`, 'error');
-                currentRateDisplay.textContent = 'Error';
+                console.error("Error fetching rate for", base, target, ":", error);
                 return null;
-            } finally {
-                hideLoading();
             }
         }
-        async function fetchAndDisplayInitialRate() {
-            const selectedSymbol = currencyPairSelect.value;
-            ratePairDisplay.textContent = selectedSymbol.replace(/([A-Z]{3})(USD|EUR|GBP|JPY)/, '$1/$2');
-            await fetchForexRate(selectedSymbol);
-        }
-        function calculateMargin(currentPrice) {
+        
+        // --- Margin Calculator Logic ---
+        async function calculateMargin() {
+            hideMessage();
+            resultArea.style.display = 'none';
+
             const accountCurrency = accountCurrencySelect.value;
             const leverage = parseFloat(leverageSelect.value);
-            const selectedSymbol = currencyPairSelect.value;
+            const currencyPair = currencyPairSelect.value;
             const tradeSizeUnits = parseFloat(tradeSizeInput.value);
-            
+            const [baseCurrency, quoteCurrency] = currencyPair.split('/');
+
             if (isNaN(tradeSizeUnits) || tradeSizeUnits <= 0 || leverage <= 0) {
                 return showMessage("Please enter valid inputs for Margin.", 'error');
             }
-            if (currentPrice === null) return;
+
+            let marginRequiredInBaseCurrency = (tradeSizeUnits / leverage);
             
-            const { quote: quoteCurrencyOfPair } = parseSymbol(selectedSymbol);
-            let marginRequiredInBaseCurrency = (currentPrice * tradeSizeUnits) / leverage;
-            let marginBaseCurrency = quoteCurrencyOfPair;
-            
-            if (marginBaseCurrency !== accountCurrency) {
-                 showMessage(`Cannot convert margin to ${accountCurrency} without a conversion rate. Showing margin in ${marginBaseCurrency}.`, 'error');
-                 marginCurrencySymbol.textContent = marginBaseCurrency;
-            } else {
-                marginCurrencySymbol.textContent = accountCurrency;
+            if (baseCurrency !== accountCurrency) {
+                 const conversionRate = await fetchExchangeRate(baseCurrency, accountCurrency);
+                 if (conversionRate) {
+                     marginRequiredInBaseCurrency *= conversionRate;
+                 } else {
+                     return showMessage(`Could not fetch conversion rate for ${baseCurrency}/${accountCurrency}. Margin may be inaccurate.`, 'error');
+                 }
             }
             
             requiredMarginDisplay.textContent = marginRequiredInBaseCurrency.toFixed(2);
-            
-            const { pipSize, valueLabel, isPipCalculable } = getPipPointDetails(selectedSymbol);
-            if (isPipCalculable) {
-                const pipPointValue = (tradeSizeUnits * pipSize).toFixed(2);
-                pipValueDisplay.textContent = pipPointValue;
-                pipValueCurrencySymbol.textContent = (quoteCurrencyOfPair === 'JPY' ? 'JPY' : 'USD');
-                pipValueRow.style.display = 'flex';
-            } else {
-                pipValueDisplay.textContent = valueLabel;
-                pipValueCurrencySymbol.textContent = '';
-                pipValueRow.style.display = 'flex';
+            marginCurrencySymbol.textContent = accountCurrency;
+
+            // Pip Value Calculation
+            const pipSize = currencyPair.includes('JPY') ? 0.01 : 0.0001;
+            let pipPointValue = tradeSizeUnits * pipSize;
+            let pipPointCurrencySymbol = quoteCurrency;
+
+            if (quoteCurrency !== accountCurrency) {
+                const conversionRate = await fetchExchangeRate(quoteCurrency, accountCurrency);
+                if (conversionRate) {
+                    pipPointValue *= conversionRate;
+                } else {
+                    return showMessage(`Could not fetch conversion rate for pip value.`, 'error');
+                }
             }
+            pipValueDisplay.textContent = pipPointValue.toFixed(2);
+            pipValueCurrencySymbol.textContent = accountCurrency;
+            pipValueRow.style.display = 'flex';
+            
+            resultArea.style.display = 'block';
         }
 
-        // --- Client-Side Risk Calculators Logic (NO API CALLS) ---
-        function calculateRisk(currentPrice) {
+        // --- Position Size & Risk/Reward Logic ---
+        function calculateRiskReward() {
+            hideMessage();
+            resultArea.style.display = 'none';
+            
             const capital = parseFloat(capitalInput.value);
-            const riskPercent = parseFloat(riskPercentInput.value);
+            const riskPercent = parseFloat(riskPercentSlider.value);
             const entryPrice = parseFloat(entryPriceInput.value);
             const stopLossPrice = parseFloat(stopLossPriceInput.value);
             const takeProfitPrice = parseFloat(takeProfitPriceInput.value);
-            
+
             if (isNaN(capital) || isNaN(riskPercent) || isNaN(entryPrice) || isNaN(stopLossPrice)) {
                  return showMessage("Please enter valid inputs for the Risk Calculators.", 'error');
             }
             if (capital <= 0 || riskPercent <= 0 || entryPrice <= 0 || stopLossPrice <= 0) {
-                return showMessage("All risk values must be positive.", 'error');
+                return showMessage("All values must be positive.", 'error');
             }
             if (riskPercent > 100) {
                  return showMessage("Risk percent cannot exceed 100.", 'error');
@@ -298,96 +270,22 @@
             }
             
             const riskAmount = capital * (riskPercent / 100);
-            
-            let stopLossPips = Math.abs(entryPrice - stopLossPrice);
-            if (entryPrice.toString().includes('.') && entryPrice.toString().split('.')[1].length >= 4) {
-                 stopLossPips = stopLossPips * 10000;
-            }
-            
+            const stopLossPips = getPipPointDetails(entryPrice, stopLossPrice, 'EURUSD'); // Simplified for now
             const recommendedUnits = riskAmount / Math.abs(entryPrice - stopLossPrice);
             
+            const risk = Math.abs(entryPrice - stopLossPrice);
+            const reward = Math.abs(entryPrice - takeProfitPrice);
             let rrRatio = 'N/A';
-            if (!isNaN(takeProfitPrice) && takeProfitPrice > 0 && Math.abs(entryPrice - stopLossPrice) !== 0) {
-                 rrRatio = (Math.abs(entryPrice - takeProfitPrice) / Math.abs(entryPrice - stopLossPrice)).toFixed(2);
+            if (!isNaN(takeProfitPrice) && takeProfitPrice > 0 && risk !== 0) {
+                 rrRatio = (reward / risk).toFixed(2);
             }
             
             riskAmountDisplay.textContent = `$${riskAmount.toFixed(2)}`;
-            stopLossPipsDisplay.textContent = stopLossPips.toFixed(2);
+            stopLossPipsDisplay.textContent = `${stopLossPips} pips`;
             recommendedUnitsDisplay.textContent = recommendedUnits.toFixed(2);
             rrRatioDisplay.textContent = `1:${rrRatio}`;
             
-            posSizeResultsOutput.style.display = 'block';
-        }
-        
-        // --- Master Calculation Function ---
-        async function calculateAll() {
-            hideMessage();
-            showLoading();
-            
-            const selectedSymbol = currencyPairSelect.value;
-            const currentPrice = await fetchForexRate(selectedSymbol);
-            
-            if (currentPrice !== null) {
-                calculateMargin(currentPrice);
-            }
-            
-            calculateRisk(currentPrice);
-
-            hideLoading();
-            resultsArea.style.display = 'block';
-        }
-        
-        // --- Helper Functions from Original Code (for API Calculator) ---
-        function getContractDetails(symbol) { return { contractSize: 1, marginFactor: 1 }; }
-        function getAssetType(symbol) {
-             if (symbol.length === 6 && !symbol.startsWith('X') && !['AAPL', 'TSLA', 'GOOGL', 'US30', 'SPX500', 'NAS100', 'UK100', 'BTCUSD', 'ETHUSD', 'XRPUSD'].includes(symbol)) { return 'forex'; }
-             else if (symbol.startsWith('XAU') || symbol.startsWith('XAG')) { return 'metal'; }
-             else if (['AAPL', 'TSLA', 'GOOGL'].includes(symbol)) { return 'stock'; }
-             else if (['US30', 'SPX500', 'NAS100', 'UK100'].includes(symbol)) { return 'index'; }
-             else if (['BTCUSD', 'ETHUSD', 'XRPUSD'].includes(symbol)) { return 'crypto'; }
-             return 'unknown';
-        }
-        function parseSymbol(symbol) {
-             if (symbol.startsWith('XAU') || symbol.startsWith('XAG')) { return { base: symbol.substring(0, 3), quote: symbol.substring(3, 6) }; }
-             else if (symbol.length === 6) { return { base: symbol.substring(0, 3), quote: symbol.substring(3, 6) }; }
-             else {
-                 if (['AAPL', 'TSLA', 'GOOGL', 'BTCUSD', 'ETHUSD', 'XRPUSD'].includes(symbol)) { return { base: 'USD', quote: 'USD' }; }
-                 else if (symbol === 'UK100') { return { base: 'GBP', quote: 'USD' }; }
-                 else if (['US30', 'SPX500', 'NAS100'].includes(symbol)) { return { base: 'USD', quote: 'USD' }; }
-             }
-             return { base: '', quote: '' };
-        }
-        function getPipPointDetails(symbol) {
-             const assetType = getAssetType(symbol);
-             let pipSize = 0;
-             let valueLabel = 'N/A';
-             let isPipCalculable = false;
-             switch (assetType) {
-                 case 'forex':
-                     isPipCalculable = true; valueLabel = 'Pip Value';
-                     if (symbol.includes('JPY')) { pipSize = 0.01; } else { pipSize = 0.0001; }
-                     break;
-                 case 'metal': case 'stock': case 'index': case 'crypto':
-                     isPipCalculable = true; valueLabel = 'Point Value'; pipSize = 1;
-                     break;
-             }
-             return { pipSize, valueLabel, isPipCalculable };
-        }
-        function updateTradeSizeLabel() {
-            const selectedSymbol = currencyPairSelect.value;
-            const assetType = getAssetType(selectedSymbol);
-            let labelText = "Trade Size (Units):";
-            let defaultValue = "1";
-            switch (assetType) {
-                case 'forex': labelText = "Trade Size (Base Currency Units):"; defaultValue = "100000"; break;
-                case 'metal': labelText = "Trade Size (Ounces):"; defaultValue = "1"; break;
-                case 'stock': labelText = "Trade Size (Shares):"; defaultValue = "1"; break;
-                case 'index': labelText = "Trade Size (Contracts/Units):"; defaultValue = "1"; break;
-                case 'crypto': labelText = "Trade Size (Coins):"; defaultValue = "1"; break;
-            }
-            tradeSizeLabel.textContent = labelText;
-            tradeSizeInput.value = defaultValue;
-            tradeSizeInput.placeholder = `e.g., ${defaultValue}`;
+            resultArea.style.display = 'block';
         }
     </script>
 </body>
