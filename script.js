@@ -19,8 +19,8 @@ const riskPercentValue = document.getElementById('risk_percent_value');
 const entryPriceInput = document.getElementById('entry_price');
 const stopLossPriceInput = document.getElementById('stop_loss_price');
 const takeProfitPriceInput = document.getElementById('take_profit_price');
-const rrEntryPriceInput = document.getElementById('rr_entry_price');
-const rrStopLossPriceInput = document.getElementById('rr_stop_loss_price');
+const rrEntryPriceInput = document.getElementById('entry_price');
+const rrStopLossPriceInput = document.getElementById('stop_loss_price');
 const resultArea = document.getElementById('resultArea');
 const riskAmountDisplay = document.getElementById('risk_amount');
 const stopLossPipsDisplay = document.getElementById('stop_loss_pips');
@@ -89,11 +89,10 @@ currencyPairSelect.addEventListener('change', () => {
     updateTradeSizeLabel();
 });
 
+
 // --- Margin Calculator Logic ---
 async function calculateMargin() {
     hideMessage();
-    resultArea.style.display = 'none';
-    
     const accountCurrency = accountCurrencySelect.value;
     const leverage = parseFloat(leverageSelect.value);
     const currencyPair = currencyPairSelect.value;
@@ -138,12 +137,12 @@ async function calculateMargin() {
     stopLossPipsDisplay.textContent = 'N/A';
     recommendedUnitsDisplay.textContent = 'N/A';
     rrRatioDisplay.textContent = 'N/A';
-
+    
     resultArea.style.display = 'block';
 }
 
 // --- Position Size & Risk/Reward Logic ---
-function calculateRiskReward() {
+function calculateRiskRewardAndPosition() {
     hideMessage();
     resultArea.style.display = 'none';
     
@@ -152,7 +151,7 @@ function calculateRiskReward() {
     const entryPrice = parseFloat(entryPriceInput.value);
     const stopLossPrice = parseFloat(stopLossPriceInput.value);
     const takeProfitPrice = parseFloat(takeProfitPriceInput.value);
-    
+
     if (isNaN(capital) || isNaN(riskPercent) || isNaN(entryPrice) || isNaN(stopLossPrice)) {
          return showMessage("Please enter valid inputs for the Position Size Calculator.", 'error');
     }
@@ -177,16 +176,16 @@ function calculateRiskReward() {
          rrRatio = (reward / risk).toFixed(2);
     }
     
-    riskAmountDisplay.textContent = `$${riskAmount.toFixed(2)}`;
-    stopLossPipsDisplay.textContent = `${stopLossPips} pips`;
-    recommendedUnitsDisplay.textContent = recommendedUnits.toFixed(2);
-    rrRatioDisplay.textContent = `1:${rrRatio}`;
-    
     // Clear other results
     requiredMarginDisplay.textContent = 'N/A';
     marginCurrencySymbol.textContent = '';
     pipValueDisplay.textContent = 'N/A';
     pipValueCurrencySymbol.textContent = '';
+
+    riskAmountDisplay.textContent = `$${riskAmount.toFixed(2)}`;
+    stopLossPipsDisplay.textContent = `${stopLossPips} pips`;
+    recommendedUnitsDisplay.textContent = recommendedUnits.toFixed(2);
+    rrRatioDisplay.textContent = `1:${rrRatio}`;
     
     resultArea.style.display = 'block';
 }
