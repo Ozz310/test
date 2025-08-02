@@ -10,23 +10,25 @@ const leverageSelect = document.getElementById('leverage');
 const currencyPairSelect = document.getElementById('currencyPair');
 const tradeSizeInput = document.getElementById('tradeSize');
 const tradeSizeLabel = document.getElementById('tradeSizeLabel');
-const ratePairDisplay = document.getElementById('ratePairDisplay');
-const currentRateDisplay = document.getElementById('currentRateDisplay');
-const requiredMarginDisplay = document.getElementById('requiredMarginDisplay');
-const marginCurrencySymbol = document.getElementById('marginCurrencySymbol');
 const messageBox = document.getElementById('messageBox');
 const messageText = document.getElementById('messageText');
 const loadingSpinnerMargin = document.getElementById('loadingSpinnerMargin');
 const loadingSpinnerRR = document.getElementById('loadingSpinnerRR');
-const pipValueRow = document.getElementById('pipValueRow');
+
+const marginResultsArea = document.getElementById('marginResultsArea');
+const rrResultsArea = document.getElementById('rrResultsArea');
+
+const ratePairDisplay = document.getElementById('ratePairDisplay');
+const currentRateDisplay = document.getElementById('currentRateDisplay');
+const timestampMargin = document.getElementById('timestampMargin');
+const requiredMarginDisplay = document.getElementById('requiredMarginDisplay');
+const marginCurrencySymbol = document.getElementById('marginCurrencySymbol');
 const pipValueDisplay = document.getElementById('pipValueDisplay');
 const pipValueCurrencySymbol = document.getElementById('pipValueCurrencySymbol');
-const resultArea = document.getElementById('resultArea');
 
-// Position Size & R/R DOM elements
 const capitalInput = document.getElementById('capital');
 const riskPercentInput = document.getElementById('riskPercent');
-const instrumentRRSelect = document.getElementById('instrumentRR'); // New DOM element
+const instrumentRRSelect = document.getElementById('instrumentRR');
 const entryPriceInput = document.getElementById('entryPrice');
 const stopLossPriceInput = document.getElementById('stopLossPrice');
 const takeProfitPriceInput = document.getElementById('takeProfitPrice');
@@ -45,12 +47,21 @@ currencyPairSelect.addEventListener('change', () => {
     updateTradeSizeLabel();
 });
 
+// Clear results on input change for a better UX
+[accountCurrencySelect, leverageSelect, currencyPairSelect, tradeSizeInput].forEach(elem => {
+    elem.addEventListener('input', () => marginResultsArea.style.display = 'none');
+});
+[capitalInput, riskPercentInput, instrumentRRSelect, entryPriceInput, stopLossPriceInput, takeProfitPriceInput].forEach(elem => {
+    elem.addEventListener('input', () => rrResultsArea.style.display = 'none');
+});
+
 // --- Message Box Functions ---
 function showMessage(message, type = 'info') {
     messageText.textContent = message;
     messageBox.classList.add('show');
     messageBox.style.backgroundColor = (type === 'error') ? '#d32f2f' : '#333';
-    resultArea.style.display = 'none';
+    marginResultsArea.style.display = 'none';
+    rrResultsArea.style.display = 'none';
 }
 
 function hideMessage() {
@@ -63,6 +74,19 @@ function showLoading(spinner) {
 
 function hideLoading(spinner) {
     if (spinner) spinner.classList.remove('show');
+}
+
+function validateInputs(inputs) {
+    let isValid = true;
+    inputs.forEach(input => {
+        if (input.value === "" || isNaN(parseFloat(input.value)) || parseFloat(input.value) <= 0) {
+            input.classList.add('invalid');
+            isValid = false;
+        } else {
+            input.classList.remove('invalid');
+        }
+    });
+    return isValid;
 }
 
 // --- Helper Functions ---
@@ -176,6 +200,7 @@ async function fetchAndDisplayInitialRate() {
     const rates = await fetchConversionRates(base);
     if (rates && rates[quote]) {
         currentRateDisplay.textContent = rates[quote].toFixed(5);
+        timestampMargin.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
     } else {
         currentRateDisplay.textContent = 'N/A';
     }
@@ -184,7 +209,12 @@ async function fetchAndDisplayInitialRate() {
 async function calculateMargin() {
     hideMessage();
     showLoading(loadingSpinnerMargin);
-    resultArea.style.display = 'block';
+
+    const inputsToValidate = [tradeSizeInput];
+    if (!validateInputs(inputsToValidate)) {
+        showMessage("Please check your inputs.", 'error');
+        return;
+    }
 
     const accountCurrency = accountCurrencySelect.value;
     const leverage = parseFloat(leverageSelect.value);
@@ -197,15 +227,6 @@ async function calculateMargin() {
         return;
     }
 
-    if (isNaN(tradeSizeUnits) || tradeSizeUnits <= 0) {
-        showMessage("Please enter a valid Trade Size (Units).", 'error');
-        return;
-    }
-    if (leverage <= 0) {
-        showMessage("Invalid Leverage selected.", 'error');
-        return;
-    }
-
     const { base: baseCurrencyOfPair, quote: quoteCurrencyOfPair } = parseSymbol(selectedSymbol);
     
     const baseRates = await fetchConversionRates(baseCurrencyOfPair);
@@ -214,6 +235,7 @@ async function calculateMargin() {
     }
     const currentPrice = baseRates[quoteCurrencyOfPair];
     currentRateDisplay.textContent = currentPrice.toFixed(5);
+    timestampMargin.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
     
     let marginRequiredInBaseCurrency = (currentPrice * tradeSizeUnits) / leverage;
 
@@ -259,6 +281,11 @@ async function calculateMargin() {
         pipValueCurrencySymbol.textContent = '';
     }
 
+    // Display the results area
+    marginResultsArea.style.display = 'block';
+    // Clear the other results area
+    rrResultsArea.style.display = 'none';
+
     hideLoading(loadingSpinnerMargin);
 }
 
@@ -266,14 +293,19 @@ async function calculateMargin() {
 function calculateRiskRewardAndPosition() {
     hideMessage();
     showLoading(loadingSpinnerRR);
-    resultArea.style.display = 'block';
+
+    const inputsToValidate = [capitalInput, entryPriceInput, stopLossPriceInput];
+    if (!validateInputs(inputsToValidate)) {
+        showMessage("Please check your inputs.", 'error');
+        return;
+    }
 
     const capital = parseFloat(capitalInput.value);
     const riskPercent = parseFloat(document.getElementById('riskPercent').value);
     const entryPrice = parseFloat(entryPriceInput.value);
     const stopLossPrice = parseFloat(stopLossPriceInput.value);
     const takeProfitPrice = parseFloat(takeProfitPriceInput.value);
-    const selectedSymbol = instrumentRRSelect.value; // Get instrument from new dropdown
+    const selectedSymbol = instrumentRRSelect.value;
     
     const assetType = getAssetType(selectedSymbol);
     if (assetType === 'unknown') {
@@ -282,18 +314,6 @@ function calculateRiskRewardAndPosition() {
         return;
     }
 
-    if (isNaN(capital) || isNaN(riskPercent) || isNaN(entryPrice) || isNaN(stopLossPrice)) {
-        showMessage("Please enter valid numbers for all fields in the Position Size Calculator.", 'error');
-        hideLoading(loadingSpinnerRR);
-        return;
-    }
-    
-    if (capital <= 0 || riskPercent <= 0 || entryPrice <= 0 || stopLossPrice <= 0) {
-        showMessage("All values must be positive.", 'error');
-        hideLoading(loadingSpinnerRR);
-        return;
-    }
-    
     if (riskPercent > 100) {
         showMessage("Risk percent cannot exceed 100.", 'error');
         hideLoading(loadingSpinnerRR);
@@ -344,11 +364,10 @@ function calculateRiskRewardAndPosition() {
     recommendedUnitsDisplay.textContent = recommendedUnits.toFixed(0);
     rrRatioDisplay.textContent = `1:${rrRatio}`;
 
-    // Clear margin-related results to show a clean separation
-    requiredMarginDisplay.textContent = 'N/A';
-    marginCurrencySymbol.textContent = '';
-    pipValueDisplay.textContent = 'N/A';
-    pipValueCurrencySymbol.textContent = '';
-    
+    // Display the results area
+    rrResultsArea.style.display = 'block';
+    // Clear the other results area
+    marginResultsArea.style.display = 'none';
+
     hideLoading(loadingSpinnerRR);
 }
