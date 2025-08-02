@@ -146,6 +146,7 @@ button {
     align-items: center;
     justify-content: center;
     gap: 10px;
+    margin-top: 20px;
 }
 button:hover {
     background-color: #DDAA33;
