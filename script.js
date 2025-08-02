@@ -15,9 +15,6 @@ const messageText = document.getElementById('messageText');
 const loadingSpinnerMargin = document.getElementById('loadingSpinnerMargin');
 const loadingSpinnerRR = document.getElementById('loadingSpinnerRR');
 
-const marginResultsArea = document.getElementById('marginResultsArea');
-const rrResultsArea = document.getElementById('rrResultsArea');
-
 const ratePairDisplay = document.getElementById('ratePairDisplay');
 const currentRateDisplay = document.getElementById('currentRateDisplay');
 const timestampMargin = document.getElementById('timestampMargin');
@@ -37,6 +34,13 @@ const stopLossPipsDisplay = document.getElementById('stopLossPipsDisplay');
 const recommendedUnitsDisplay = document.getElementById('recommendedUnitsDisplay');
 const rrRatioDisplay = document.getElementById('rrRatioDisplay');
 
+// All result card elements for easy reset
+const resultCards = [
+    ratePairDisplay, currentRateDisplay, requiredMarginDisplay, marginCurrencySymbol,
+    pipValueDisplay, pipValueCurrencySymbol, riskAmountDisplay, stopLossPipsDisplay,
+    recommendedUnitsDisplay, rrRatioDisplay
+];
+
 // --- Event Listeners ---
 window.onload = () => {
     fetchAndDisplayInitialRate();
@@ -47,21 +51,11 @@ currencyPairSelect.addEventListener('change', () => {
     updateTradeSizeLabel();
 });
 
-// Clear results on input change for a better UX
-[accountCurrencySelect, leverageSelect, currencyPairSelect, tradeSizeInput].forEach(elem => {
-    elem.addEventListener('input', () => marginResultsArea.style.display = 'none');
-});
-[capitalInput, riskPercentInput, instrumentRRSelect, entryPriceInput, stopLossPriceInput, takeProfitPriceInput].forEach(elem => {
-    elem.addEventListener('input', () => rrResultsArea.style.display = 'none');
-});
-
 // --- Message Box Functions ---
 function showMessage(message, type = 'info') {
     messageText.textContent = message;
     messageBox.classList.add('show');
     messageBox.style.backgroundColor = (type === 'error') ? '#d32f2f' : '#333';
-    marginResultsArea.style.display = 'none';
-    rrResultsArea.style.display = 'none';
 }
 
 function hideMessage() {
@@ -74,6 +68,20 @@ function showLoading(spinner) {
 
 function hideLoading(spinner) {
     if (spinner) spinner.classList.remove('show');
+}
+
+function resetResults() {
+    ratePairDisplay.textContent = 'N/A';
+    currentRateDisplay.textContent = 'N/A';
+    timestampMargin.textContent = '';
+    requiredMarginDisplay.textContent = 'N/A';
+    marginCurrencySymbol.textContent = '';
+    pipValueDisplay.textContent = 'N/A';
+    pipValueCurrencySymbol.textContent = '';
+    riskAmountDisplay.textContent = 'N/A';
+    stopLossPipsDisplay.textContent = 'N/A';
+    recommendedUnitsDisplay.textContent = 'N/A';
+    rrRatioDisplay.textContent = 'N/A';
 }
 
 function validateInputs(inputs) {
@@ -209,10 +217,12 @@ async function fetchAndDisplayInitialRate() {
 async function calculateMargin() {
     hideMessage();
     showLoading(loadingSpinnerMargin);
+    resetResults();
 
     const inputsToValidate = [tradeSizeInput];
     if (!validateInputs(inputsToValidate)) {
         showMessage("Please check your inputs.", 'error');
+        hideLoading(loadingSpinnerMargin);
         return;
     }
 
@@ -224,6 +234,7 @@ async function calculateMargin() {
     const assetType = getAssetType(selectedSymbol);
     if (assetType === 'unknown') {
         showMessage("This calculator only supports Forex pairs and Metals with the current API.", 'error');
+        hideLoading(loadingSpinnerMargin);
         return;
     }
 
@@ -231,9 +242,11 @@ async function calculateMargin() {
     
     const baseRates = await fetchConversionRates(baseCurrencyOfPair);
     if (!baseRates) {
+        hideLoading(loadingSpinnerMargin);
         return;
     }
     const currentPrice = baseRates[quoteCurrencyOfPair];
+    ratePairDisplay.textContent = `${baseCurrencyOfPair}/${quoteCurrencyOfPair}`;
     currentRateDisplay.textContent = currentPrice.toFixed(5);
     timestampMargin.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
     
@@ -249,6 +262,7 @@ async function calculateMargin() {
             showMessage(`Could not fetch conversion rate from ${marginCurrency} to ${accountCurrency}. Margin may be inaccurate.`, 'error');
             requiredMarginDisplay.textContent = finalMarginAmount.toFixed(2);
             marginCurrencySymbol.textContent = marginCurrency;
+            hideLoading(loadingSpinnerMargin);
             return;
         }
         finalMarginAmount = finalMarginAmount * conversionRates[accountCurrency];
@@ -268,6 +282,7 @@ async function calculateMargin() {
                 showMessage(`Could not fetch conversion rate for pip/point value from ${quoteCurrencyOfPair} to ${accountCurrency}.`, 'error');
                 pipValueDisplay.textContent = 'N/A';
                 pipValueCurrencySymbol.textContent = '';
+                hideLoading(loadingSpinnerMargin);
                 return;
             }
             const conversionRateForPip = conversionRates[accountCurrency];
@@ -281,11 +296,6 @@ async function calculateMargin() {
         pipValueCurrencySymbol.textContent = '';
     }
 
-    // Display the results area
-    marginResultsArea.style.display = 'block';
-    // Clear the other results area
-    rrResultsArea.style.display = 'none';
-
     hideLoading(loadingSpinnerMargin);
 }
 
@@ -293,10 +303,12 @@ async function calculateMargin() {
 function calculateRiskRewardAndPosition() {
     hideMessage();
     showLoading(loadingSpinnerRR);
+    resetResults();
 
     const inputsToValidate = [capitalInput, entryPriceInput, stopLossPriceInput];
     if (!validateInputs(inputsToValidate)) {
         showMessage("Please check your inputs.", 'error');
+        hideLoading(loadingSpinnerRR);
         return;
     }
 
@@ -363,11 +375,6 @@ function calculateRiskRewardAndPosition() {
     stopLossPipsDisplay.textContent = `${stopLossPips.toFixed(1)} ${assetType === 'forex' ? 'pips' : 'points'}`;
     recommendedUnitsDisplay.textContent = recommendedUnits.toFixed(0);
     rrRatioDisplay.textContent = `1:${rrRatio}`;
-
-    // Display the results area
-    rrResultsArea.style.display = 'block';
-    // Clear the other results area
-    marginResultsArea.style.display = 'none';
 
     hideLoading(loadingSpinnerRR);
 }
