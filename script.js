@@ -26,6 +26,7 @@ const resultArea = document.getElementById('resultArea');
 // Position Size & R/R DOM elements
 const capitalInput = document.getElementById('capital');
 const riskPercentInput = document.getElementById('riskPercent');
+const instrumentRRSelect = document.getElementById('instrumentRR'); // New DOM element
 const entryPriceInput = document.getElementById('entryPrice');
 const stopLossPriceInput = document.getElementById('stopLossPrice');
 const takeProfitPriceInput = document.getElementById('takeProfitPrice');
@@ -272,8 +273,15 @@ function calculateRiskRewardAndPosition() {
     const entryPrice = parseFloat(entryPriceInput.value);
     const stopLossPrice = parseFloat(stopLossPriceInput.value);
     const takeProfitPrice = parseFloat(takeProfitPriceInput.value);
-    const selectedSymbol = currencyPairSelect.value;
+    const selectedSymbol = instrumentRRSelect.value; // Get instrument from new dropdown
     
+    const assetType = getAssetType(selectedSymbol);
+    if (assetType === 'unknown') {
+        showMessage("Position sizing is not supported for this asset type.", 'error');
+        hideLoading(loadingSpinnerRR);
+        return;
+    }
+
     if (isNaN(capital) || isNaN(riskPercent) || isNaN(entryPrice) || isNaN(stopLossPrice)) {
         showMessage("Please enter valid numbers for all fields in the Position Size Calculator.", 'error');
         hideLoading(loadingSpinnerRR);
@@ -313,11 +321,9 @@ function calculateRiskRewardAndPosition() {
     const stopLossPips = priceDifference / pipSize;
     
     // Step 3: Calculate Position Size (in units)
-    // The value of 1 pip/point is determined by the asset's quote currency
     const valuePerUnit = priceDifference;
     let recommendedUnits = riskAmount / valuePerUnit;
 
-    const assetType = getAssetType(selectedSymbol);
     if (assetType === 'forex') {
         recommendedUnits = recommendedUnits * 100000;
     }
