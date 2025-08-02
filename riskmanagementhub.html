@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Risk Management Hub</title>
+    <title>The Traders Gazette - Risk Management Hub</title>
     <link rel="stylesheet" href="style.css">
-    <script src="script.js" defer></script>
 </head>
 <body>
 
@@ -17,58 +16,99 @@
         <div class="calculators-grid">
             
             <div class="calculator-container">
-                <div class="calc-card">
-                    <h3>Margin Calculator</h3>
-                    <div class="input-group">
-                        <label for="leverage">Leverage:</label>
-                        <input type="number" id="leverage" value="500" placeholder="e.g., 500">
-                    </div>
-                    <div class="input-group">
-                        <label for="lotSize">Lot Size:</label>
-                        <input type="number" id="lotSize" value="1" placeholder="e.g., 1">
-                    </div>
-                    <div class="input-group">
-                        <label for="contractSize">Contract Size:</label>
-                        <input type="number" id="contractSize" value="100000" placeholder="e.g., 100000">
-                    </div>
-                    <button onclick="calculateMargin()">Calculate Margin</button>
-                    <div class="output-container" id="marginOutput">
-                        </div>
+                <h3>Margin & Pip Value Calculator</h3>
+                <div class="input-group">
+                    <label for="accountCurrency">Account Currency:</label>
+                    <select id="accountCurrency">
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="GBP">GBP</option>
+                        <option value="JPY">JPY</option>
+                    </select>
                 </div>
+                <div class="input-group">
+                    <label for="currencyPair">Currency Pair:</label>
+                    <select id="currencyPair">
+                        <option value="EUR/USD">EUR/USD</option>
+                        <option value="GBP/USD">GBP/USD</option>
+                        <option value="USD/JPY">USD/JPY</option>
+                        <option value="AUD/USD">AUD/USD</option>
+                        <option value="NZD/USD">NZD/USD</option>
+                        </select>
+                </div>
+                <div class="input-group">
+                    <label for="leverage">Leverage:</label>
+                    <input type="number" id="leverage" value="500" min="1" placeholder="e.g., 500">
+                </div>
+                <div class="input-group">
+                    <label for="tradeSize" id="tradeSizeLabel">Trade Size (Units):</label>
+                    <input type="number" id="tradeSize" value="100000" placeholder="e.g., 100000">
+                </div>
+                <button onclick="calculateMargin()">Calculate</button>
             </div>
 
             <div class="calculator-container">
-                <div class="calc-card">
-                    <h3>Position Size & R/R Calculator</h3>
-                    <div class="input-group">
-                        <label for="accountBalance">Account Balance ($):</label>
-                        <input type="number" id="accountBalance" value="1000" placeholder="e.g., 1000">
-                    </div>
-                    <div class="input-group">
-                        <label for="riskPercent">Risk (%):</label>
-                        <input type="number" id="riskPercent" value="1" placeholder="e.g., 1">
-                    </div>
-                    <div class="input-group">
-                        <label for="entryPrice">Entry Price:</label>
-                        <input type="number" id="entryPrice" value="1.08500" step="0.00001" placeholder="e.g., 1.08500">
-                    </div>
-                    <div class="input-group">
-                        <label for="stopLoss">Stop Loss:</label>
-                        <input type="number" id="stopLoss" value="1.08450" step="0.00001" placeholder="e.g., 1.08450">
-                    </div>
-                    <div class="input-group">
-                        <label for="takeProfit">Take Profit:</label>
-                        <input type="number" id="takeProfit" value="1.08750" step="0.00001" placeholder="e.g., 1.08750">
-                    </div>
-                    <button onclick="calculateRiskRewardAndPosition()">Calculate</button>
-                    <div class="output-container" id="riskRewardOutput">
-                        </div>
+                <h3>Position Size & R/R Calculator</h3>
+                <div class="input-group">
+                    <label for="capital">Account Capital:</label>
+                    <input type="number" id="capital" value="1000" placeholder="e.g., 1000">
                 </div>
+                <div class="input-group">
+                    <label for="risk_percent_slider">Risk Percentage: <span id="risk_percent_value">1</span>%</label>
+                    <input type="range" id="risk_percent_slider" min="0.1" max="100" value="1" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label for="entry_price">Entry Price:</label>
+                    <input type="number" id="entry_price" value="1.08500" step="0.00001" placeholder="e.g., 1.08500">
+                </div>
+                <div class="input-group">
+                    <label for="stop_loss_price">Stop Loss Price:</label>
+                    <input type="number" id="stop_loss_price" value="1.08450" step="0.00001" placeholder="e.g., 1.08450">
+                </div>
+                <div class="input-group">
+                    <label for="take_profit_price">Take Profit Price:</label>
+                    <input type="number" id="take_profit_price" value="1.08750" step="0.00001" placeholder="e.g., 1.08750">
+                </div>
+                <button onclick="calculateRiskRewardAndPosition()">Calculate</button>
             </div>
             
         </div>
-        
-    </div>
 
+        <div class="result-container" id="resultArea">
+            <div id="messageBox">
+                <p id="messageText"></p>
+            </div>
+            <div class="results-grid">
+                <div class="output-card" id="requiredMarginDisplay">
+                    <h4>Required Margin</h4>
+                    <p>--</p>
+                    <span id="marginCurrencySymbol"></span>
+                </div>
+                <div class="output-card" id="pipValueRow">
+                    <h4>Pip Value</h4>
+                    <p>--</p>
+                    <span id="pipValueCurrencySymbol"></span>
+                </div>
+                <div class="output-card">
+                    <h4>Risk Amount</h4>
+                    <p id="risk_amount">--</p>
+                </div>
+                <div class="output-card">
+                    <h4>Stop Loss (Pips)</h4>
+                    <p id="stop_loss_pips">--</p>
+                </div>
+                <div class="output-card">
+                    <h4>Recommended Units</h4>
+                    <p id="recommended_units">--</p>
+                </div>
+                <div class="output-card">
+                    <h4>R/R Ratio</h4>
+                    <p id="rr_ratio">--</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
 </body>
 </html>
