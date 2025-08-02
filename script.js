@@ -27,7 +27,7 @@ const capitalInput = document.getElementById('capital');
 const riskPercentInput = document.getElementById('riskPercent');
 const instrumentRRSelect = document.getElementById('instrumentRR');
 const entryPriceInput = document.getElementById('entryPrice');
-const stopLossPriceInput = document.getElementById('stopLossPrice');
+const stopLossPriceInput = document = document.getElementById('stopLossPrice');
 const takeProfitPriceInput = document.getElementById('takeProfitPrice');
 const riskAmountDisplay = document.getElementById('riskAmountDisplay');
 const stopLossPipsDisplay = document.getElementById('stopLossPipsDisplay');
@@ -305,7 +305,7 @@ function calculateRiskRewardAndPosition() {
     showLoading(loadingSpinnerRR);
     resetResults();
 
-    const inputsToValidate = [capitalInput, entryPriceInput, stopLossPriceInput];
+    const inputsToValidate = [capitalInput, entryPriceInput, stopLossPriceInput, takeProfitPriceInput];
     if (!validateInputs(inputsToValidate)) {
         showMessage("Please check your inputs.", 'error');
         hideLoading(loadingSpinnerRR);
@@ -352,22 +352,23 @@ function calculateRiskRewardAndPosition() {
     const priceDifference = Math.abs(entryPrice - stopLossPrice);
     const stopLossPips = priceDifference / pipSize;
     
+    // Calculate Pip Value in Quote Currency
+    const pipValueInQuoteCurrency = (assetType === 'forex') ? 10 : 1;
+    const pipValuePerPoint = (pipValueInQuoteCurrency * pipSize) / (pipSize * 10000);
+    
     // Step 3: Calculate Position Size (in units)
-    const valuePerUnit = priceDifference;
-    let recommendedUnits = riskAmount / valuePerUnit;
-
-    if (assetType === 'forex') {
-        recommendedUnits = recommendedUnits * 100000;
+    let recommendedUnits = 0;
+    if (priceDifference !== 0) {
+        const stopLossDollarValuePerUnit = priceDifference;
+        recommendedUnits = riskAmount / stopLossDollarValuePerUnit;
     }
-
+    
     // Calculate Risk/Reward Ratio
     let rrRatio = 'N/A';
-    if (!isNaN(takeProfitPrice) && takeProfitPrice > 0) {
-        const riskDistance = Math.abs(entryPrice - stopLossPrice);
-        const rewardDistance = Math.abs(entryPrice - takeProfitPrice);
-        if (riskDistance !== 0) {
-            rrRatio = (rewardDistance / riskDistance).toFixed(2);
-        }
+    const riskDistance = Math.abs(entryPrice - stopLossPrice);
+    const rewardDistance = Math.abs(entryPrice - takeProfitPrice);
+    if (riskDistance !== 0) {
+        rrRatio = (rewardDistance / riskDistance).toFixed(2);
     }
     
     // Display results
