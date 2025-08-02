@@ -1,201 +1,206 @@
-// --- API Keys ---
+// IMPORTANT: Replace with your actual API Key from exchangerate-api.com
 const API_KEY = "c27c0cc562a3bfd70fff7003";
+
+// Base URL for the Exchangerate API
 const API_BASE_URL = "https://v6.exchangerate-api.com/v6/";
 
-// --- DOM Elements ---
+// --- DOM elements ---
 const accountCurrencySelect = document.getElementById('accountCurrency');
 const leverageSelect = document.getElementById('leverage');
 const currencyPairSelect = document.getElementById('currencyPair');
 const tradeSizeInput = document.getElementById('tradeSize');
 const tradeSizeLabel = document.getElementById('tradeSizeLabel');
-const requiredMarginDisplay = document.getElementById('requiredMarginDisplay').querySelector('p');
+const ratePairDisplay = document.getElementById('ratePairDisplay');
+const currentRateDisplay = document.getElementById('currentRateDisplay');
+const requiredMarginDisplay = document.getElementById('requiredMarginDisplay');
 const marginCurrencySymbol = document.getElementById('marginCurrencySymbol');
-const pipValueRow = document.getElementById('pipValueRow');
-const pipValueDisplay = document.getElementById('pipValueRow').querySelector('p');
-const pipValueCurrencySymbol = document.getElementById('pipValueCurrencySymbol');
-const capitalInput = document.getElementById('capital');
-const riskPercentSlider = document.getElementById('risk_percent_slider');
-const riskPercentValue = document.getElementById('risk_percent_value');
-const entryPriceInput = document.getElementById('entry_price');
-const stopLossPriceInput = document.getElementById('stop_loss_price');
-const takeProfitPriceInput = document.getElementById('take_profit_price');
-const resultArea = document.getElementById('resultArea');
-const riskAmountDisplay = document.getElementById('risk_amount');
-const stopLossPipsDisplay = document.getElementById('stop_loss_pips');
-const recommendedUnitsDisplay = document.getElementById('recommended_units');
-const rrRatioDisplay = document.getElementById('rr_ratio');
 const messageBox = document.getElementById('messageBox');
 const messageText = document.getElementById('messageText');
+const loadingSpinner = document.getElementById('loadingSpinner');
+const pipValueRow = document.getElementById('pipValueRow');
+const pipValueDisplay = document.getElementById('pipValueDisplay');
+const pipValueCurrencySymbol = document.getElementById('pipValueCurrencySymbol');
 
 // --- Event Listeners ---
-document.addEventListener('DOMContentLoaded', function() {
-    riskPercentSlider.addEventListener('input', function() {
-        riskPercentValue.textContent = this.value;
-    });
-});
-document.addEventListener('DOMContentLoaded', updateTradeSizeLabel);
+window.onload = fetchAndDisplayInitialRate;
 currencyPairSelect.addEventListener('change', () => {
+    fetchAndDisplayInitialRate();
     updateTradeSizeLabel();
 });
 
 // --- Message Box Functions ---
 function showMessage(message, type = 'info') {
     messageText.textContent = message;
-    messageBox.style.backgroundColor = (type === 'error') ? '#d32f2f' : '#333';
     messageBox.classList.add('show');
-    resultArea.style.display = 'block';
-}
-function hideMessage() { messageBox.classList.remove('show'); }
-
-// --- Helper functions ---
-function getPipValue(entry, stop, symbol) {
-    const pipMultiplier = symbol.includes('JPY') ? 100 : 10000;
-    return Math.abs(entry - stop) * pipMultiplier;
-}
-
-async function fetchExchangeRate(base, target) {
-    try {
-        const url = `${API_BASE_URL}${API_KEY}/pair/${base}/${target}`;
-        const response = await fetch(url);
-        const data = await response.json();
-        if (data.result === 'success') {
-            return data.conversion_rate;
-        } else {
-            console.error(`API Error: ${data['error-type']}`);
-            showMessage(`Could not fetch conversion rate for ${base}/${target}.`, 'error');
-            return null;
-        }
-    } catch (error) {
-        console.error("Error fetching rate for", base, target, ":", error);
-        return null;
+    if (type === 'error') {
+        messageBox.style.backgroundColor = '#d32f2f';
+    } else {
+        messageBox.style.backgroundColor = '#333';
     }
+}
+
+function hideMessage() {
+    messageBox.classList.remove('show');
+}
+
+function showLoading() {
+    loadingSpinner.classList.add('show');
+}
+
+function hideLoading() {
+    loadingSpinner.classList.remove('show');
+}
+
+// --- Helper Functions ---
+function getContractDetails(symbol) {
+    return { contractSize: 1, marginFactor: 1 };
 }
 
 function updateTradeSizeLabel() {
-    const selectedSymbol = currencyPairSelect.value;
-    const isJPY = selectedSymbol.includes('JPY');
-    const labelText = "Trade Size (Units):";
-    let defaultValue = isJPY ? "100000" : "100000";
-    tradeSizeLabel.textContent = labelText;
-    tradeSizeInput.value = defaultValue;
-    tradeSizeInput.placeholder = `e.g., ${defaultValue}`;
+    tradeSizeLabel.textContent = "Trade Size (Base Currency Units):";
+    tradeSizeInput.value = "100000";
+    tradeSizeInput.placeholder = `e.g., 100000`;
 }
 
-// --- Margin Calculator Logic ---
+function getPipPointDetails(symbol) {
+    let pipSize = 0;
+    let valueLabel = 'Pip Value';
+    let isPipCalculable = true;
+
+    if (symbol.includes('JPY')) {
+        pipSize = 0.01;
+    } else {
+        pipSize = 0.0001;
+    }
+    return { pipSize, valueLabel, isPipCalculable };
+}
+
+function parseSymbol(symbol) {
+    return { base: symbol.substring(0, 3), quote: symbol.substring(3, 6) };
+}
+
+// --- Core Logic ---
+async function fetchConversionRates(baseCurrency) {
+    hideMessage();
+    showLoading();
+    try {
+        const url = `${API_BASE_URL}${API_KEY}/latest/${baseCurrency}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.result === 'success') {
+            return data.conversion_rates;
+        } else if (data.result === 'error') {
+            showMessage(`API Error: ${data["error-type"]}.`, 'error');
+            return null;
+        } else {
+            showMessage(`Could not fetch conversion rates for ${baseCurrency}.`, 'error');
+            return null;
+        }
+    } catch (error) {
+        console.error("Error fetching rates for", baseCurrency, ":", error);
+        showMessage(`Failed to fetch live rates for ${baseCurrency}. Check your internet connection or API key.`, 'error');
+        return null;
+    } finally {
+        hideLoading();
+    }
+}
+
+async function fetchAndDisplayInitialRate() {
+    const selectedSymbol = currencyPairSelect.value;
+    ratePairDisplay.textContent = selectedSymbol.replace(/([A-Z]{3})([A-Z]{3})/, '$1/$2');
+
+    const { base, quote } = parseSymbol(selectedSymbol);
+    const conversionRates = await fetchConversionRates(base);
+    if (conversionRates && conversionRates[quote]) {
+        currentRateDisplay.textContent = conversionRates[quote].toFixed(5);
+    } else {
+        currentRateDisplay.textContent = 'N/A';
+    }
+}
+
 async function calculateMargin() {
     hideMessage();
+    showLoading();
+
     const accountCurrency = accountCurrencySelect.value;
     const leverage = parseFloat(leverageSelect.value);
-    const currencyPair = currencyPairSelect.value;
+    const selectedSymbol = currencyPairSelect.value;
     const tradeSizeUnits = parseFloat(tradeSizeInput.value);
-    const [baseCurrency, quoteCurrency] = currencyPair.split('/');
 
-    if (isNaN(tradeSizeUnits) || tradeSizeUnits <= 0 || isNaN(leverage) || leverage <= 0) {
-        return showMessage("Please enter valid inputs for Margin.", 'error');
+    if (isNaN(tradeSizeUnits) || tradeSizeUnits <= 0) {
+        showMessage("Please enter a valid Trade Size (Units).", 'error');
+        hideLoading();
+        return;
+    }
+    if (leverage <= 0) {
+        showMessage("Invalid Leverage selected.", 'error');
+        hideLoading();
+        return;
     }
 
-    let marginRequired = (tradeSizeUnits / leverage);
+    const { base: baseCurrencyOfPair, quote: quoteCurrencyOfPair } = parseSymbol(selectedSymbol);
 
-    if (baseCurrency !== accountCurrency) {
-        const conversionRate = await fetchExchangeRate(baseCurrency, accountCurrency);
-        if (conversionRate) {
-            marginRequired *= conversionRate;
-        } else {
-            return showMessage(`Could not fetch conversion rate for ${baseCurrency}/${accountCurrency}. Margin may be inaccurate.`, 'error');
+    const baseRates = await fetchConversionRates(baseCurrencyOfPair);
+    if (!baseRates) {
+        requiredMarginDisplay.textContent = 'N/A';
+        marginCurrencySymbol.textContent = accountCurrency;
+        pipValueDisplay.textContent = 'N/A';
+        pipValueCurrencySymbol.textContent = '';
+        return;
+    }
+    const currentPrice = baseRates[quoteCurrencyOfPair];
+    currentRateDisplay.textContent = currentPrice.toFixed(5);
+    
+    let marginRequiredInBaseCurrency = (currentPrice * tradeSizeUnits) / leverage;
+
+    let finalMarginAmount = marginRequiredInBaseCurrency;
+    let marginBaseCurrency = baseCurrencyOfPair;
+    
+    if (marginBaseCurrency !== accountCurrency) {
+        const conversionRates = await fetchConversionRates(marginBaseCurrency);
+        if (!conversionRates || !conversionRates[accountCurrency]) {
+            showMessage(`Could not fetch conversion rate from ${marginBaseCurrency} to ${accountCurrency}. Margin may be inaccurate.`, 'error');
+            requiredMarginDisplay.textContent = 'N/A';
+            marginCurrencySymbol.textContent = accountCurrency;
+            hideLoading();
+            return;
         }
+        finalMarginAmount = finalMarginAmount * conversionRates[accountCurrency];
     }
-
-    requiredMarginDisplay.textContent = `$${marginRequired.toFixed(2)}`;
+    
+    requiredMarginDisplay.textContent = finalMarginAmount.toFixed(2);
     marginCurrencySymbol.textContent = accountCurrency;
 
-    const pipSize = currencyPair.includes('JPY') ? 0.01 : 0.0001;
-    let pipValue = tradeSizeUnits * pipSize;
+    const { pipSize, valueLabel, isPipCalculable } = getPipPointDetails(selectedSymbol);
 
-    if (quoteCurrency !== accountCurrency) {
-        const conversionRate = await fetchExchangeRate(quoteCurrency, accountCurrency);
-        if (conversionRate) {
-            pipValue *= conversionRate;
-        } else {
-            return showMessage(`Could not fetch conversion rate for pip value.`, 'error');
+    if (isPipCalculable) {
+        let pipPointValue = 0;
+        let pipPointCurrencySymbol = accountCurrency;
+
+        pipPointValue = tradeSizeUnits * pipSize;
+        
+        if (quoteCurrencyOfPair !== accountCurrency) {
+            const conversionRates = await fetchConversionRates(quoteCurrencyOfPair);
+            if (!conversionRates || !conversionRates[accountCurrency]) {
+                showMessage(`Could not fetch conversion rate for pip value from ${quoteCurrencyOfPair} to ${accountCurrency}.`, 'error');
+                pipValueDisplay.textContent = 'N/A';
+                pipValueCurrencySymbol.textContent = '';
+                hideLoading();
+                return;
+            }
+            const conversionRateForPip = conversionRates[accountCurrency];
+            pipPointValue = pipPointValue * conversionRateForPip;
         }
-    }
-    pipValueDisplay.textContent = `$${pipValue.toFixed(2)}`;
-    pipValueCurrencySymbol.textContent = accountCurrency;
-    pipValueRow.parentElement.style.display = 'block';
 
-    // Reset other results
-    riskAmountDisplay.textContent = '--';
-    stopLossPipsDisplay.textContent = '--';
-    recommendedUnitsDisplay.textContent = '--';
-    rrRatioDisplay.textContent = '--';
-    
-    resultArea.style.display = 'block';
-}
-
-// --- Position Size & Risk/Reward Logic ---
-async function calculateRiskRewardAndPosition() {
-    hideMessage();
-    const capital = parseFloat(capitalInput.value);
-    const riskPercent = parseFloat(riskPercentSlider.value);
-    const entryPrice = parseFloat(entryPriceInput.value);
-    const stopLossPrice = parseFloat(stopLossPriceInput.value);
-    const takeProfitPrice = parseFloat(takeProfitPriceInput.value);
-    const currencyPair = currencyPairSelect.value;
-    const accountCurrency = accountCurrencySelect.value;
-
-    if (isNaN(capital) || isNaN(riskPercent) || isNaN(entryPrice) || isNaN(stopLossPrice)) {
-        return showMessage("Please enter valid inputs for the Position Size Calculator.", 'error');
-    }
-    if (capital <= 0 || riskPercent <= 0 || entryPrice <= 0 || stopLossPrice <= 0) {
-        return showMessage("All values must be positive.", 'error');
-    }
-    if (riskPercent > 100) {
-        return showMessage("Risk percent cannot exceed 100.", 'error');
-    }
-    if (entryPrice === stopLossPrice) {
-        return showMessage("Entry and Stop Loss cannot be the same.", 'error');
+        pipValueDisplay.textContent = pipPointValue.toFixed(2);
+        pipValueCurrencySymbol.textContent = pipPointCurrencySymbol;
+        pipValueRow.style.display = 'flex';
+    } else {
+        pipValueDisplay.textContent = valueLabel;
+        pipValueCurrencySymbol.textContent = '';
+        pipValueRow.style.display = 'flex';
     }
 
-    const riskAmount = capital * (riskPercent / 100);
-    const stopLossPips = getPipValue(entryPrice, stopLossPrice, currencyPair);
-    const pipValueInQuote = await getPipValueInQuoteCurrency(currencyPair);
-    const conversionRate = await fetchExchangeRate(currencyPair.split('/')[1], accountCurrency);
-    
-    if (pipValueInQuote === null || conversionRate === null) {
-        return showMessage("Could not fetch necessary conversion rates.", 'error');
-    }
-
-    const riskPerUnit = Math.abs(entryPrice - stopLossPrice) * 1; // 1 unit
-    const recommendedUnits = riskAmount / (riskPerUnit * conversionRate)
-    
-    const risk = Math.abs(entryPrice - stopLossPrice);
-    const reward = Math.abs(entryPrice - takeProfitPrice);
-    let rrRatio = 'N/A';
-    if (!isNaN(takeProfitPrice) && takeProfitPrice > 0 && risk !== 0) {
-        rrRatio = (reward / risk).toFixed(2);
-    }
-    
-    // Reset Margin results
-    requiredMarginDisplay.textContent = '--';
-    marginCurrencySymbol.textContent = '';
-    pipValueDisplay.textContent = '--';
-    pipValueCurrencySymbol.textContent = '';
-
-    riskAmountDisplay.textContent = `$${riskAmount.toFixed(2)}`;
-    stopLossPipsDisplay.textContent = `${stopLossPips.toFixed(1)} pips`;
-    recommendedUnitsDisplay.textContent = `${recommendedUnits.toFixed(0)}`;
-    rrRatioDisplay.textContent = `1:${rrRatio}`;
-    
-    resultArea.style.display = 'block';
-}
-
-async function getPipValueInQuoteCurrency(currencyPair) {
-    const [base, quote] = currencyPair.split('/');
-    const pipMultiplier = currencyPair.includes('JPY') ? 0.01 : 0.0001;
-    
-    // For a standard lot (100,000 units), pip value is 10 in quote currency
-    // For 1 unit, it's 10 / 100,000 = 0.0001
-    // For 100,000 units, pip value is (100000 * 0.0001) = 10
-    // This is the value of one pip in the QUOTE currency
-    return 10; 
+    hideLoading();
 }
