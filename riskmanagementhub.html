@@ -4,130 +4,71 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Risk Management Hub</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
 </head>
 <body>
-    <div class="calculator-container">
-        <h1 class="text-3xl font-bold text-center mb-6" style="color: #F0D788;">Risk Management Hub</h1>
-        <div class="message-box" id="messageBox">
-            <span id="messageText"></span>
-            <button class="message-box-close" onclick="hideMessage()">&times;</button>
-        </div>
-        
-        <div class="two-column-layout">
-            <div class="calculator-section margin-calc">
-                <h2 class="text-xl font-bold mb-4" style="color: #F0D788;">1. Margin Calculator</h2>
-                <p class="api-note"><i class="fas fa-info-circle"></i> Rate updates daily (non-live) on the free plan.</p>
-                <div class="input-group">
-                    <label for="accountCurrency">Account Currency:</label>
-                    <select id="accountCurrency">
-                        <option value="USD">USD - US Dollar</option>
-                        <option value="EUR">EUR - Euro</option>
-                        <option value="GBP">GBP - British Pound</option>
-                        <option value="JPY">JPY - Japanese Yen</option>
-                        <option value="AUD">AUD - Australian Dollar</option>
-                        <option value="CAD">CAD - Canadian Dollar</option>
-                        <option value="CHF">CHF - Swiss Franc</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label for="leverage">Leverage:</label>
-                    <select id="leverage">
-                        <option value="1">1:1</option>
-                        <option value="10">1:10</option>
-                        <option value="25">1:25</option>
-                        <option value="50">1:50</option>
-                        <option value="100" selected>1:100</option>
-                        <option value="200">1:200</option>
-                        <option value="400">1:400</option>
-                        <option value="500">1:500</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label for="currencyPair">Instrument:</label>
-                    <select id="currencyPair">
-                        <optgroup label="Forex (Major)">
-                            <option value="EUR/USD">EUR/USD</option>
-                            <option value="GBP/USD">GBP/USD</option>
-                            <option value="USD/JPY">USD/JPY</option>
-                            <option value="AUD/USD">AUD/USD</option>
-                            <option value="USD/CAD">USD/CAD</option>
-                            <option value="USD/CHF">USD/CHF</option>
-                            <option value="NZD/USD">NZD/USD</option>
-                        </optgroup>
-                        <optgroup label="Forex (Crosses)">
-                            <option value="EUR/GBP">EUR/GBP</option>
-                            <option value="EUR/JPY">EUR/JPY</option>
-                            <option value="GBP/JPY">GBP/JPY</option>
-                            <option value="AUD/JPY">AUD/JPY</option>
-                            <option value="EURAUD">EUR/AUD</option>
-                            <option value="CAD/JPY">CAD/JPY</option>
-                        </optgroup>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label for="tradeSize" id="tradeSizeLabel">Trade Size (Units):</label>
-                    <input type="number" id="tradeSize" value="100000" min="0.01" step="0.01">
-                </div>
-                <button onclick="calculateMargin()">
-                    <i class="fas fa-money-check-alt"></i> Calculate Margin
-                </button>
-            </div>
 
-            <div class="calculator-section risk-calc">
-                <h2 class="text-xl font-bold mb-4" style="color: #F0D788;">2. Position Size & R/R</h2>
-                <p class="api-note"><i class="fas fa-info-circle"></i> This tool is 100% offline.</p>
-                <div class="input-group">
-                    <label for="capital">Total Capital ($):</label>
-                    <input type="number" id="capital" placeholder="e.g., 5000" min="1" step="any">
-                </div>
-                <div class="input-group">
-                    <label for="risk_percent_slider">Risk Per Trade (<span id="risk_percent_value">2</span>%):</label>
-                    <input type="range" id="risk_percent_slider" min="0.1" max="10" step="0.1" value="2">
-                </div>
-                <div class="input-group">
-                    <label for="entry_price">Entry Price:</label>
-                    <input type="number" id="entry_price" placeholder="e.g., 1.25000" min="0.00001" step="any">
-                </div>
-                <div class="input-group">
-                    <label for="stop_loss_price">Stop Loss Price:</label>
-                    <input type="number" id="stop_loss_price" placeholder="e.g., 1.24800" min="0.00001" step="any">
-                </div>
-                <div class="input-group">
-                    <label for="take_profit_price">Take Profit Price:</label>
-                    <input type="number" id="take_profit_price" placeholder="e.g., 1.26000" min="0.00001" step="any">
-                </div>
-                <button onclick="calculateRiskRewardAndPosition()">
-                    <i class="fas fa-chart-line"></i> Calculate R/R & Position
-                </button>
-            </div>
-        </div>
-        
-        <div class="result-area" id="resultArea" style="display: none;">
-            <h2 class="text-xl font-bold mb-4" style="color: #F0D788;">Calculation Results</h2>
-            <div class="results-grid">
-                <div>
-                    <p>Required Margin: <span id="requiredMarginDisplay">0.00</span> <span id="marginCurrencySymbol">USD</span></p>
-                    <p>Pip/Point Value: <span id="pipValueDisplay">N/A</span> <span id="pipValueCurrencySymbol"></span></p>
-                </div>
-                <div>
-                    <p>Risk Amount: <span id="risk_amount"></span></p>
-                    <p>Stop Loss Pips: <span id="stop_loss_pips"></span></p>
-                    <p>Recommended Units: <span id="recommended_units"></span></p>
-                    <p>R/R Ratio: <span id="rr_ratio"></span></p>
-                </div>
-            </div>
+    <div class="main-container">
+        <div class="logo-container">
+            <img src="your-logo.png" alt="The Traders Gazette Logo" class="brand-logo">
         </div>
 
-        <div class="branding">
-            <img src="https://raw.githubusercontent.com/Ozz310/TradersGazette/refs/heads/main/calculator/WhatsApp%20Image%202025-06-18%20at%2011.37.15%20(1).jpeg"
-                alt="The Traders Gazette Logo"
-                onerror="this.src='https://placehold.co/180x50/1a1a1a/F0D788?text=The+Traders+Gazette+Logo+Placeholder';">
-            <p>Powered by The Trader's Gazette</p>
+        <div class="calculators-grid">
+            
+            <div class="calculator-container">
+                <div class="calc-card">
+                    <h3>Margin Calculator</h3>
+                    <div class="input-group">
+                        <label for="leverage">Leverage:</label>
+                        <input type="number" id="leverage" value="500" placeholder="e.g., 500">
+                    </div>
+                    <div class="input-group">
+                        <label for="lotSize">Lot Size:</label>
+                        <input type="number" id="lotSize" value="1" placeholder="e.g., 1">
+                    </div>
+                    <div class="input-group">
+                        <label for="contractSize">Contract Size:</label>
+                        <input type="number" id="contractSize" value="100000" placeholder="e.g., 100000">
+                    </div>
+                    <button onclick="calculateMargin()">Calculate Margin</button>
+                    <div class="output-container" id="marginOutput">
+                        </div>
+                </div>
+            </div>
+
+            <div class="calculator-container">
+                <div class="calc-card">
+                    <h3>Position Size & R/R Calculator</h3>
+                    <div class="input-group">
+                        <label for="accountBalance">Account Balance ($):</label>
+                        <input type="number" id="accountBalance" value="1000" placeholder="e.g., 1000">
+                    </div>
+                    <div class="input-group">
+                        <label for="riskPercent">Risk (%):</label>
+                        <input type="number" id="riskPercent" value="1" placeholder="e.g., 1">
+                    </div>
+                    <div class="input-group">
+                        <label for="entryPrice">Entry Price:</label>
+                        <input type="number" id="entryPrice" value="1.08500" step="0.00001" placeholder="e.g., 1.08500">
+                    </div>
+                    <div class="input-group">
+                        <label for="stopLoss">Stop Loss:</label>
+                        <input type="number" id="stopLoss" value="1.08450" step="0.00001" placeholder="e.g., 1.08450">
+                    </div>
+                    <div class="input-group">
+                        <label for="takeProfit">Take Profit:</label>
+                        <input type="number" id="takeProfit" value="1.08750" step="0.00001" placeholder="e.g., 1.08750">
+                    </div>
+                    <button onclick="calculateRiskRewardAndPosition()">Calculate</button>
+                    <div class="output-container" id="riskRewardOutput">
+                        </div>
+                </div>
+            </div>
+            
         </div>
+        
     </div>
-    <script src="script.js"></script>
+
 </body>
 </html>
