@@ -18,67 +18,8 @@
         </div>
         
         <div class="two-column-layout">
-            <div class="calculator-section margin-calc">
-                <h2 class="text-xl font-bold mb-4" style="color: #F0D788;">1. Margin Calculator</h2>
-                <p class="api-note"><i class="fas fa-info-circle"></i> Rate updates daily (non-live) on the free plan.</p>
-                <div class="input-group">
-                    <label for="accountCurrency">Account Currency:</label>
-                    <select id="accountCurrency">
-                        <option value="USD">USD - US Dollar</option>
-                        <option value="EUR">EUR - Euro</option>
-                        <option value="GBP">GBP - British Pound</option>
-                        <option value="JPY">JPY - Japanese Yen</option>
-                        <option value="AUD">AUD - Australian Dollar</option>
-                        <option value="CAD">CAD - Canadian Dollar</option>
-                        <option value="CHF">CHF - Swiss Franc</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label for="leverage">Leverage:</label>
-                    <select id="leverage">
-                        <option value="1">1:1</option>
-                        <option value="10">1:10</option>
-                        <option value="25">1:25</option>
-                        <option value="50">1:50</option>
-                        <option value="100" selected>1:100</option>
-                        <option value="200">1:200</option>
-                        <option value="400">1:400</option>
-                        <option value="500">1:500</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label for="currencyPair">Instrument:</label>
-                    <select id="currencyPair">
-                        <optgroup label="Forex (Major)">
-                            <option value="EUR/USD">EUR/USD</option>
-                            <option value="GBP/USD">GBP/USD</option>
-                            <option value="USD/JPY">USD/JPY</option>
-                            <option value="AUD/USD">AUD/USD</option>
-                            <option value="USD/CAD">USD/CAD</option>
-                            <option value="USD/CHF">USD/CHF</option>
-                            <option value="NZD/USD">NZD/USD</option>
-                        </optgroup>
-                        <optgroup label="Forex (Crosses)">
-                            <option value="EUR/GBP">EUR/GBP</option>
-                            <option value="EUR/JPY">EUR/JPY</option>
-                            <option value="GBP/JPY">GBP/JPY</option>
-                            <option value="AUD/JPY">AUD/JPY</option>
-                            <option value="EUR/AUD">EUR/AUD</option>
-                            <option value="CAD/JPY">CAD/JPY</option>
-                        </optgroup>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label for="tradeSize" id="tradeSizeLabel">Trade Size (Units):</label>
-                    <input type="number" id="tradeSize" value="100000" min="0.01" step="0.01">
-                </div>
-                <button onclick="calculateMargin()">
-                    <i class="fas fa-money-check-alt"></i> Calculate Margin
-                </button>
-            </div>
-
             <div class="calculator-section risk-calc">
-                <h2 class="text-xl font-bold mb-4" style="color: #F0D788;">2. Position Size & R/R</h2>
+                <h2 class="text-xl font-bold mb-4" style="color: #F0D788;">1. Position Size Calculator</h2>
                 <p class="api-note"><i class="fas fa-info-circle"></i> This tool is 100% offline.</p>
                 <div class="input-group">
                     <label for="capital">Total Capital ($):</label>
@@ -96,12 +37,28 @@
                     <label for="stop_loss_price">Stop Loss Price:</label>
                     <input type="number" id="stop_loss_price" placeholder="e.g., 1.24800" min="0.00001" step="any">
                 </div>
+                <button onclick="calculatePositionSize()">
+                    <i class="fas fa-calculator"></i> Calculate Position
+                </button>
+            </div>
+
+            <div class="calculator-section risk-calc">
+                <h2 class="text-xl font-bold mb-4" style="color: #F0D788;">2. Risk/Reward Ratio</h2>
+                <p class="api-note"><i class="fas fa-info-circle"></i> This tool is 100% offline.</p>
+                <div class="input-group">
+                    <label for="rr_entry_price">Entry Price:</label>
+                    <input type="number" id="rr_entry_price" placeholder="e.g., 1.25000" min="0.00001" step="any">
+                </div>
+                <div class="input-group">
+                    <label for="rr_stop_loss_price">Stop Loss Price:</label>
+                    <input type="number" id="rr_stop_loss_price" placeholder="e.g., 1.24800" min="0.00001" step="any">
+                </div>
                 <div class="input-group">
                     <label for="take_profit_price">Take Profit Price:</label>
                     <input type="number" id="take_profit_price" placeholder="e.g., 1.26000" min="0.00001" step="any">
                 </div>
                 <button onclick="calculateRiskReward()">
-                    <i class="fas fa-chart-line"></i> Calculate R/R & Position
+                    <i class="fas fa-chart-line"></i> Calculate R/R
                 </button>
             </div>
         </div>
@@ -109,10 +66,6 @@
         <div class="result-area" id="resultArea" style="display: none;">
             <h2 class="text-xl font-bold mb-4" style="color: #F0D788;">Calculation Results</h2>
             <div class="results-grid">
-                <div>
-                    <p>Required Margin: <span id="requiredMarginDisplay">0.00</span> <span id="marginCurrencySymbol">USD</span></p>
-                    <p>Pip/Point Value: <span id="pipValueDisplay">N/A</span> <span id="pipValueCurrencySymbol"></span></p>
-                </div>
                 <div>
                     <p>Risk Amount: <span id="risk_amount"></span></p>
                     <p>Stop Loss Pips: <span id="stop_loss_pips"></span></p>
@@ -129,164 +82,7 @@
             <p>Powered by The Trader's Gazette</p>
         </div>
     </div>
-    <script>
-        const API_KEY = "c27c0cc562a3bfd70fff7003";
-        const API_BASE_URL = "https://v6.exchangerate-api.com/v6/";
 
-        const accountCurrencySelect = document.getElementById('accountCurrency');
-        const leverageSelect = document.getElementById('leverage');
-        const currencyPairSelect = document.getElementById('currencyPair');
-        const tradeSizeInput = document.getElementById('tradeSize');
-        const tradeSizeLabel = document.getElementById('tradeSizeLabel');
-        const requiredMarginDisplay = document.getElementById('requiredMarginDisplay');
-        const marginCurrencySymbol = document.getElementById('marginCurrencySymbol');
-        const pipValueRow = document.getElementById('pipValueRow');
-        const pipValueDisplay = document.getElementById('pipValueDisplay');
-        const pipValueCurrencySymbol = document.getElementById('pipValueCurrencySymbol');
-        const capitalInput = document.getElementById('capital');
-        const riskPercentSlider = document.getElementById('risk_percent_slider');
-        const riskPercentValue = document.getElementById('risk_percent_value');
-        const entryPriceInput = document.getElementById('entry_price');
-        const stopLossPriceInput = document.getElementById('stop_loss_price');
-        const takeProfitPriceInput = document.getElementById('take_profit_price');
-        const rrEntryPriceInput = document.getElementById('entry_price'); // Linked to pos size entry
-        const rrStopLossPriceInput = document.getElementById('stop_loss_price'); // Linked to pos size stop loss
-        const resultArea = document.getElementById('resultArea');
-        const riskAmountDisplay = document.getElementById('risk_amount');
-        const stopLossPipsDisplay = document.getElementById('stop_loss_pips');
-        const recommendedUnitsDisplay = document.getElementById('recommended_units');
-        const rrRatioDisplay = document.getElementById('rr_ratio');
-        const messageBox = document.getElementById('messageBox');
-        const messageText = document.getElementById('messageText');
-        
-        // --- Helper functions ---
-        function showMessage(message, type = 'info') {
-            messageText.textContent = message;
-            messageBox.classList.add('show');
-            messageBox.style.backgroundColor = (type === 'error') ? '#d32f2f' : '#333';
-        }
-        function hideMessage() { messageBox.classList.remove('show'); }
-        
-        function getPipPointDetails(entry, stop, symbol) {
-            let pips = Math.abs(entry - stop);
-            if (symbol.includes('JPY')) { pips = pips * 100; } 
-            else { pips = pips * 10000; }
-            return pips.toFixed(2);
-        }
-
-        function getAssetType(symbol) {
-             if (symbol.includes('/') && !symbol.startsWith('X')) { return 'forex'; }
-             return 'unknown';
-        }
-
-        async function fetchExchangeRate(base, target) {
-            try {
-                const url = `${API_BASE_URL}${API_KEY}/pair/${base}/${target}`;
-                const response = await fetch(url);
-                const data = await response.json();
-                if (data.result === 'success') {
-                    return data.conversion_rate;
-                } else {
-                    showMessage(`Could not fetch conversion rate for ${base}/${target}.`, 'error');
-                    return null;
-                }
-            } catch (error) {
-                console.error("Error fetching rate for", base, target, ":", error);
-                return null;
-            }
-        }
-        
-        // --- Margin Calculator Logic ---
-        async function calculateMargin() {
-            hideMessage();
-            resultArea.style.display = 'none';
-
-            const accountCurrency = accountCurrencySelect.value;
-            const leverage = parseFloat(leverageSelect.value);
-            const currencyPair = currencyPairSelect.value;
-            const tradeSizeUnits = parseFloat(tradeSizeInput.value);
-            const [baseCurrency, quoteCurrency] = currencyPair.split('/');
-
-            if (isNaN(tradeSizeUnits) || tradeSizeUnits <= 0 || leverage <= 0) {
-                return showMessage("Please enter valid inputs for Margin.", 'error');
-            }
-
-            let marginRequiredInBaseCurrency = (tradeSizeUnits / leverage);
-            
-            if (baseCurrency !== accountCurrency) {
-                 const conversionRate = await fetchExchangeRate(baseCurrency, accountCurrency);
-                 if (conversionRate) {
-                     marginRequiredInBaseCurrency *= conversionRate;
-                 } else {
-                     return showMessage(`Could not fetch conversion rate for ${baseCurrency}/${accountCurrency}. Margin may be inaccurate.`, 'error');
-                 }
-            }
-            
-            requiredMarginDisplay.textContent = marginRequiredInBaseCurrency.toFixed(2);
-            marginCurrencySymbol.textContent = accountCurrency;
-
-            // Pip Value Calculation
-            const pipSize = currencyPair.includes('JPY') ? 0.01 : 0.0001;
-            let pipPointValue = tradeSizeUnits * pipSize;
-            let pipPointCurrencySymbol = quoteCurrency;
-
-            if (quoteCurrency !== accountCurrency) {
-                const conversionRate = await fetchExchangeRate(quoteCurrency, accountCurrency);
-                if (conversionRate) {
-                    pipPointValue *= conversionRate;
-                } else {
-                    return showMessage(`Could not fetch conversion rate for pip value.`, 'error');
-                }
-            }
-            pipValueDisplay.textContent = pipPointValue.toFixed(2);
-            pipValueCurrencySymbol.textContent = accountCurrency;
-            pipValueRow.style.display = 'flex';
-            
-            resultArea.style.display = 'block';
-        }
-
-        // --- Position Size & Risk/Reward Logic ---
-        function calculateRiskReward() {
-            hideMessage();
-            resultArea.style.display = 'none';
-            
-            const capital = parseFloat(capitalInput.value);
-            const riskPercent = parseFloat(riskPercentSlider.value);
-            const entryPrice = parseFloat(entryPriceInput.value);
-            const stopLossPrice = parseFloat(stopLossPriceInput.value);
-            const takeProfitPrice = parseFloat(takeProfitPriceInput.value);
-
-            if (isNaN(capital) || isNaN(riskPercent) || isNaN(entryPrice) || isNaN(stopLossPrice)) {
-                 return showMessage("Please enter valid inputs for the Risk Calculators.", 'error');
-            }
-            if (capital <= 0 || riskPercent <= 0 || entryPrice <= 0 || stopLossPrice <= 0) {
-                return showMessage("All values must be positive.", 'error');
-            }
-            if (riskPercent > 100) {
-                 return showMessage("Risk percent cannot exceed 100.", 'error');
-            }
-            if (entryPrice === stopLossPrice) {
-                 return showMessage("Entry and Stop Loss cannot be the same.", 'error');
-            }
-            
-            const riskAmount = capital * (riskPercent / 100);
-            const stopLossPips = getPipPointDetails(entryPrice, stopLossPrice, 'EURUSD'); // Simplified for now
-            const recommendedUnits = riskAmount / Math.abs(entryPrice - stopLossPrice);
-            
-            const risk = Math.abs(entryPrice - stopLossPrice);
-            const reward = Math.abs(entryPrice - takeProfitPrice);
-            let rrRatio = 'N/A';
-            if (!isNaN(takeProfitPrice) && takeProfitPrice > 0 && risk !== 0) {
-                 rrRatio = (reward / risk).toFixed(2);
-            }
-            
-            riskAmountDisplay.textContent = `$${riskAmount.toFixed(2)}`;
-            stopLossPipsDisplay.textContent = `${stopLossPips} pips`;
-            recommendedUnitsDisplay.textContent = recommendedUnits.toFixed(2);
-            rrRatioDisplay.textContent = `1:${rrRatio}`;
-            
-            resultArea.style.display = 'block';
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
