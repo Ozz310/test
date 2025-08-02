@@ -1,6 +1,6 @@
 body {
-    background-color: #121212; /* Dark background for premium feel */
-    color: #f5f5f5; /* Light text for readability */
+    background-color: #121212;
+    color: #f5f5f5;
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 20px;
@@ -19,19 +19,20 @@ body {
 }
 
 .brand-logo {
-    width: 150px; /* Adjust size as needed, but keep it a reasonable size */
+    width: 150px;
     height: auto;
 }
 
 .calculators-grid {
     display: grid;
-    grid-template-columns: 1fr; /* Single column on small screens */
+    grid-template-columns: 1fr;
     gap: 40px;
+    margin-bottom: 40px;
 }
 
 @media (min-width: 768px) {
     .calculators-grid {
-        grid-template-columns: 1fr 1fr; /* Two columns on larger screens */
+        grid-template-columns: 1fr 1fr;
     }
 }
 
@@ -59,7 +60,7 @@ label {
     font-weight: bold;
 }
 
-input[type="number"] {
+input, select {
     width: 100%;
     padding: 12px;
     border: 1px solid #333;
@@ -70,8 +71,23 @@ input[type="number"] {
     font-size: 16px;
 }
 
-input[type="number"]::placeholder {
-    color: #888;
+input[type="range"] {
+    -webkit-appearance: none;
+    height: 8px;
+    background: #333;
+    border-radius: 5px;
+    outline: none;
+    transition: opacity .2s;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: gold;
+    border-radius: 50%;
+    cursor: pointer;
 }
 
 button {
@@ -92,25 +108,56 @@ button:hover {
     background-color: #ffd700;
 }
 
-.output-container {
+/* Results Area Styling */
+.result-container {
+    background-color: #1e1e1e;
+    border-radius: 12px;
+    padding: 30px;
+    border: 1px solid #333;
+}
+
+#messageBox {
+    background-color: #d32f2f; /* Default to error color */
+    color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: none; /* Hide by default */
+    transition: opacity 0.3s ease;
+}
+
+#messageBox.show {
+    display: block;
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.output-card {
     background-color: #2b2b2b;
     padding: 20px;
     border-radius: 8px;
-    margin-top: 25px;
+    text-align: center;
     border: 1px dashed gold;
-    min-height: 50px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
 }
 
-.output-container h4 {
-    margin-top: 0;
-    margin-bottom: 10px;
+.output-card h4 {
+    margin: 0 0 10px 0;
     color: gold;
+    font-size: 1em;
 }
 
-.output-container p {
+.output-card p {
+    font-size: 1.5em;
+    font-weight: bold;
     margin: 0;
-    line-height: 1.5;
+    line-height: 1.2;
+}
+
+.output-card span {
+    font-size: 0.9em;
+    color: #aaa;
 }
