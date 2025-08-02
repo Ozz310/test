@@ -71,9 +71,7 @@
                     <label for="tradeSize" id="tradeSizeLabel">Trade Size (Units):</label>
                     <input type="number" id="tradeSize" value="100000" min="0.01" step="0.01">
                 </div>
-                <button onclick="calculateMargin()">
-                    <i class="fas fa-money-check-alt"></i> Calculate Margin
-                </button>
+                
             </div>
 
             <div class="calculator-section risk-calc">
@@ -99,11 +97,11 @@
                     <label for="take_profit_price">Take Profit Price:</label>
                     <input type="number" id="take_profit_price" placeholder="e.g., 1.26000" min="0.00001" step="any">
                 </div>
-                <button onclick="calculateRiskRewardAndPosition()">
-                    <i class="fas fa-chart-line"></i> Calculate R/R & Position
-                </button>
             </div>
         </div>
+        <button onclick="calculateAll()">
+            <i class="fas fa-calculator"></i> Calculate All
+        </button>
         
         <div class="result-area" id="resultArea" style="display: none;">
             <h2 class="text-xl font-bold mb-4" style="color: #F0D788;">Calculation Results</h2>
