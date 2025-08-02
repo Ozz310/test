@@ -8,10 +8,10 @@ const leverageSelect = document.getElementById('leverage');
 const currencyPairSelect = document.getElementById('currencyPair');
 const tradeSizeInput = document.getElementById('tradeSize');
 const tradeSizeLabel = document.getElementById('tradeSizeLabel');
-const requiredMarginDisplay = document.getElementById('requiredMarginDisplay');
+const requiredMarginDisplay = document.getElementById('requiredMarginDisplay').querySelector('p');
 const marginCurrencySymbol = document.getElementById('marginCurrencySymbol');
 const pipValueRow = document.getElementById('pipValueRow');
-const pipValueDisplay = document.getElementById('pipValueDisplay');
+const pipValueDisplay = document.getElementById('pipValueRow').querySelector('p');
 const pipValueCurrencySymbol = document.getElementById('pipValueCurrencySymbol');
 const capitalInput = document.getElementById('capital');
 const riskPercentSlider = document.getElementById('risk_percent_slider');
@@ -33,26 +33,26 @@ document.addEventListener('DOMContentLoaded', function() {
         riskPercentValue.textContent = this.value;
     });
 });
+document.addEventListener('DOMContentLoaded', updateTradeSizeLabel);
+currencyPairSelect.addEventListener('change', () => {
+    updateTradeSizeLabel();
+});
 
 // --- Message Box Functions ---
 function showMessage(message, type = 'info') {
     messageText.textContent = message;
-    messageBox.classList.add('show');
     messageBox.style.backgroundColor = (type === 'error') ? '#d32f2f' : '#333';
+    messageBox.classList.add('show');
+    resultArea.style.display = 'block';
 }
 function hideMessage() { messageBox.classList.remove('show'); }
 
 // --- Helper functions ---
-function getPipPointDetails(entry, stop, symbol) {
-    let pips = Math.abs(entry - stop);
-    if (symbol.includes('JPY')) { pips = pips * 100; } 
-    else { pips = pips * 10000; }
-    return pips.toFixed(2);
+function getPipValue(entry, stop, symbol) {
+    const pipMultiplier = symbol.includes('JPY') ? 100 : 10000;
+    return Math.abs(entry - stop) * pipMultiplier;
 }
-function getAssetType(symbol) {
-    if (symbol.includes('/') && !symbol.startsWith('X')) { return 'forex'; }
-    return 'unknown';
-}
+
 async function fetchExchangeRate(base, target) {
     try {
         const url = `${API_BASE_URL}${API_KEY}/pair/${base}/${target}`;
@@ -61,6 +61,7 @@ async function fetchExchangeRate(base, target) {
         if (data.result === 'success') {
             return data.conversion_rate;
         } else {
+            console.error(`API Error: ${data['error-type']}`);
             showMessage(`Could not fetch conversion rate for ${base}/${target}.`, 'error');
             return null;
         }
@@ -69,23 +70,16 @@ async function fetchExchangeRate(base, target) {
         return null;
     }
 }
+
 function updateTradeSizeLabel() {
     const selectedSymbol = currencyPairSelect.value;
-    const assetType = getAssetType(selectedSymbol);
-    let labelText = "Trade Size (Units):";
-    let defaultValue = "100000";
-    if (assetType === 'forex') {
-        labelText = "Trade Size (Base Currency Units):";
-        defaultValue = "100000";
-    }
+    const isJPY = selectedSymbol.includes('JPY');
+    const labelText = "Trade Size (Units):";
+    let defaultValue = isJPY ? "100000" : "100000";
     tradeSizeLabel.textContent = labelText;
     tradeSizeInput.value = defaultValue;
     tradeSizeInput.placeholder = `e.g., ${defaultValue}`;
 }
-document.addEventListener('DOMContentLoaded', updateTradeSizeLabel);
-currencyPairSelect.addEventListener('change', () => {
-    updateTradeSizeLabel();
-});
 
 // --- Margin Calculator Logic ---
 async function calculateMargin() {
@@ -96,91 +90,112 @@ async function calculateMargin() {
     const tradeSizeUnits = parseFloat(tradeSizeInput.value);
     const [baseCurrency, quoteCurrency] = currencyPair.split('/');
 
-    if (isNaN(tradeSizeUnits) || tradeSizeUnits <= 0 || leverage <= 0) {
+    if (isNaN(tradeSizeUnits) || tradeSizeUnits <= 0 || isNaN(leverage) || leverage <= 0) {
         return showMessage("Please enter valid inputs for Margin.", 'error');
     }
 
-    let marginRequiredInBaseCurrency = (tradeSizeUnits / leverage);
-    
+    let marginRequired = (tradeSizeUnits / leverage);
+
     if (baseCurrency !== accountCurrency) {
-         const conversionRate = await fetchExchangeRate(baseCurrency, accountCurrency);
-         if (conversionRate) {
-             marginRequiredInBaseCurrency *= conversionRate;
-         } else {
-             return showMessage(`Could not fetch conversion rate for ${baseCurrency}/${accountCurrency}. Margin may be inaccurate.`, 'error');
-         }
+        const conversionRate = await fetchExchangeRate(baseCurrency, accountCurrency);
+        if (conversionRate) {
+            marginRequired *= conversionRate;
+        } else {
+            return showMessage(`Could not fetch conversion rate for ${baseCurrency}/${accountCurrency}. Margin may be inaccurate.`, 'error');
+        }
     }
-    
-    requiredMarginDisplay.textContent = marginRequiredInBaseCurrency.toFixed(2);
+
+    requiredMarginDisplay.textContent = `$${marginRequired.toFixed(2)}`;
     marginCurrencySymbol.textContent = accountCurrency;
 
     const pipSize = currencyPair.includes('JPY') ? 0.01 : 0.0001;
-    let pipPointValue = tradeSizeUnits * pipSize;
-    
+    let pipValue = tradeSizeUnits * pipSize;
+
     if (quoteCurrency !== accountCurrency) {
         const conversionRate = await fetchExchangeRate(quoteCurrency, accountCurrency);
         if (conversionRate) {
-            pipPointValue *= conversionRate;
+            pipValue *= conversionRate;
         } else {
             return showMessage(`Could not fetch conversion rate for pip value.`, 'error');
         }
     }
-    pipValueDisplay.textContent = pipPointValue.toFixed(2);
+    pipValueDisplay.textContent = `$${pipValue.toFixed(2)}`;
     pipValueCurrencySymbol.textContent = accountCurrency;
-    pipValueRow.style.display = 'flex';
-    
-    // Clear other results
-    riskAmountDisplay.textContent = 'N/A';
-    stopLossPipsDisplay.textContent = 'N/A';
-    recommendedUnitsDisplay.textContent = 'N/A';
-    rrRatioDisplay.textContent = 'N/A';
+    pipValueRow.parentElement.style.display = 'block';
+
+    // Reset other results
+    riskAmountDisplay.textContent = '--';
+    stopLossPipsDisplay.textContent = '--';
+    recommendedUnitsDisplay.textContent = '--';
+    rrRatioDisplay.textContent = '--';
     
     resultArea.style.display = 'block';
 }
 
 // --- Position Size & Risk/Reward Logic ---
-function calculateRiskRewardAndPosition() {
+async function calculateRiskRewardAndPosition() {
     hideMessage();
     const capital = parseFloat(capitalInput.value);
     const riskPercent = parseFloat(riskPercentSlider.value);
     const entryPrice = parseFloat(entryPriceInput.value);
     const stopLossPrice = parseFloat(stopLossPriceInput.value);
     const takeProfitPrice = parseFloat(takeProfitPriceInput.value);
+    const currencyPair = currencyPairSelect.value;
+    const accountCurrency = accountCurrencySelect.value;
 
     if (isNaN(capital) || isNaN(riskPercent) || isNaN(entryPrice) || isNaN(stopLossPrice)) {
-         return showMessage("Please enter valid inputs for the Position Size Calculator.", 'error');
+        return showMessage("Please enter valid inputs for the Position Size Calculator.", 'error');
     }
     if (capital <= 0 || riskPercent <= 0 || entryPrice <= 0 || stopLossPrice <= 0) {
         return showMessage("All values must be positive.", 'error');
     }
     if (riskPercent > 100) {
-         return showMessage("Risk percent cannot exceed 100.", 'error');
+        return showMessage("Risk percent cannot exceed 100.", 'error');
     }
     if (entryPrice === stopLossPrice) {
-         return showMessage("Entry and Stop Loss cannot be the same.", 'error');
+        return showMessage("Entry and Stop Loss cannot be the same.", 'error');
     }
-    
+
     const riskAmount = capital * (riskPercent / 100);
-    const stopLossPips = getPipPointDetails(entryPrice, stopLossPrice, 'EURUSD'); // Simplified for now
-    const recommendedUnits = riskAmount / Math.abs(entryPrice - stopLossPrice);
+    const stopLossPips = getPipValue(entryPrice, stopLossPrice, currencyPair);
+    const pipValueInQuote = await getPipValueInQuoteCurrency(currencyPair);
+    const conversionRate = await fetchExchangeRate(currencyPair.split('/')[1], accountCurrency);
+    
+    if (pipValueInQuote === null || conversionRate === null) {
+        return showMessage("Could not fetch necessary conversion rates.", 'error');
+    }
+
+    const riskPerUnit = Math.abs(entryPrice - stopLossPrice) * 1; // 1 unit
+    const recommendedUnits = riskAmount / (riskPerUnit * conversionRate)
     
     const risk = Math.abs(entryPrice - stopLossPrice);
     const reward = Math.abs(entryPrice - takeProfitPrice);
     let rrRatio = 'N/A';
     if (!isNaN(takeProfitPrice) && takeProfitPrice > 0 && risk !== 0) {
-         rrRatio = (reward / risk).toFixed(2);
+        rrRatio = (reward / risk).toFixed(2);
     }
     
-    // Clear other results
-    requiredMarginDisplay.textContent = 'N/A';
+    // Reset Margin results
+    requiredMarginDisplay.textContent = '--';
     marginCurrencySymbol.textContent = '';
-    pipValueDisplay.textContent = 'N/A';
+    pipValueDisplay.textContent = '--';
     pipValueCurrencySymbol.textContent = '';
 
     riskAmountDisplay.textContent = `$${riskAmount.toFixed(2)}`;
-    stopLossPipsDisplay.textContent = `${stopLossPips} pips`;
-    recommendedUnitsDisplay.textContent = recommendedUnits.toFixed(2);
+    stopLossPipsDisplay.textContent = `${stopLossPips.toFixed(1)} pips`;
+    recommendedUnitsDisplay.textContent = `${recommendedUnits.toFixed(0)}`;
     rrRatioDisplay.textContent = `1:${rrRatio}`;
     
     resultArea.style.display = 'block';
+}
+
+async function getPipValueInQuoteCurrency(currencyPair) {
+    const [base, quote] = currencyPair.split('/');
+    const pipMultiplier = currencyPair.includes('JPY') ? 0.01 : 0.0001;
+    
+    // For a standard lot (100,000 units), pip value is 10 in quote currency
+    // For 1 unit, it's 10 / 100,000 = 0.0001
+    // For 100,000 units, pip value is (100000 * 0.0001) = 10
+    // This is the value of one pip in the QUOTE currency
+    return 10; 
 }
