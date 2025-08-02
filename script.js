@@ -1,7 +1,7 @@
-// IMPORTANT: Replace with your actual API Key from exchangerate-api.com
+// API Key provided by the user
 const API_KEY = "c27c0cc562a3bfd70fff7003";
 
-// Base URL for the Exchangerate API
+// Base URL for the Exchangerate API, using a dynamic base currency
 const API_BASE_URL = "https://v6.exchangerate-api.com/v6/";
 
 // --- DOM elements ---
@@ -32,11 +32,7 @@ currencyPairSelect.addEventListener('change', () => {
 function showMessage(message, type = 'info') {
     messageText.textContent = message;
     messageBox.classList.add('show');
-    if (type === 'error') {
-        messageBox.style.backgroundColor = '#d32f2f';
-    } else {
-        messageBox.style.backgroundColor = '#333';
-    }
+    messageBox.style.backgroundColor = (type === 'error') ? '#d32f2f' : '#333';
 }
 
 function hideMessage() {
@@ -52,54 +48,116 @@ function hideLoading() {
 }
 
 // --- Helper Functions ---
-function getContractDetails(symbol) {
-    return { contractSize: 1, marginFactor: 1 };
+function getAssetType(symbol) {
+    if (symbol.length === 6 && !symbol.startsWith('X')) {
+        return 'forex';
+    } else if (symbol.startsWith('XAU') || symbol.startsWith('XAG')) {
+        return 'metal';
+    }
+    // These are placeholders for now as the API does not support them in the provided example
+    // We will show an error message if the user tries to select them
+    else if (['AAPL', 'TSLA', 'GOOGL'].includes(symbol)) {
+        return 'stock';
+    } else if (['US30', 'SPX500', 'NAS100', 'UK100'].includes(symbol)) {
+        return 'index';
+    } else if (['BTCUSD', 'ETHUSD', 'XRPUSD'].includes(symbol)) {
+        return 'crypto';
+    }
+    return 'unknown';
 }
 
 function updateTradeSizeLabel() {
-    tradeSizeLabel.textContent = "Trade Size (Base Currency Units):";
-    tradeSizeInput.value = "100000";
-    tradeSizeInput.placeholder = `e.g., 100000`;
+    const selectedSymbol = currencyPairSelect.value;
+    const assetType = getAssetType(selectedSymbol);
+    let labelText = "Trade Size (Units):";
+    let defaultValue = "1";
+
+    switch (assetType) {
+        case 'forex':
+            labelText = "Trade Size (Base Currency Units):";
+            defaultValue = "100000";
+            break;
+        case 'metal':
+            labelText = "Trade Size (Ounces):";
+            defaultValue = "1";
+            break;
+        case 'stock':
+            labelText = "Trade Size (Shares):";
+            defaultValue = "1";
+            break;
+        case 'index':
+            labelText = "Trade Size (Contracts/Units):";
+            defaultValue = "1";
+            break;
+        case 'crypto':
+            labelText = "Trade Size (Coins):";
+            defaultValue = "1";
+            break;
+    }
+    tradeSizeLabel.textContent = labelText;
+    tradeSizeInput.value = defaultValue;
+    tradeSizeInput.placeholder = `e.g., ${defaultValue}`;
 }
 
 function getPipPointDetails(symbol) {
+    const assetType = getAssetType(symbol);
     let pipSize = 0;
-    let valueLabel = 'Pip Value';
-    let isPipCalculable = true;
+    let valueLabel = 'N/A';
+    let isPipCalculable = false;
 
-    if (symbol.includes('JPY')) {
-        pipSize = 0.01;
-    } else {
-        pipSize = 0.0001;
+    switch (assetType) {
+        case 'forex':
+            isPipCalculable = true;
+            valueLabel = 'Pip Value';
+            if (symbol.includes('JPY')) {
+                pipSize = 0.01;
+            } else {
+                pipSize = 0.0001;
+            }
+            break;
+        case 'metal':
+            isPipCalculable = true;
+            valueLabel = 'Point Value';
+            pipSize = 1;
+            break;
+        case 'stock':
+        case 'index':
+        case 'crypto':
+            isPipCalculable = false;
+            valueLabel = 'N/A';
+            break;
     }
     return { pipSize, valueLabel, isPipCalculable };
 }
 
 function parseSymbol(symbol) {
-    return { base: symbol.substring(0, 3), quote: symbol.substring(3, 6) };
+    if (symbol.startsWith('XAU') || symbol.startsWith('XAG')) {
+        return { base: symbol.substring(0, 3), quote: symbol.substring(3, 6) };
+    } else if (symbol.length === 6) {
+        return { base: symbol.substring(0, 3), quote: symbol.substring(3, 6) };
+    }
+    // These assets are not supported, so return a placeholder
+    return { base: '', quote: '' };
 }
 
 // --- Core Logic ---
 async function fetchConversionRates(baseCurrency) {
-    hideMessage();
     showLoading();
     try {
         const url = `${API_BASE_URL}${API_KEY}/latest/${baseCurrency}`;
         const response = await fetch(url);
         const data = await response.json();
-
+        
         if (data.result === 'success') {
             return data.conversion_rates;
         } else if (data.result === 'error') {
-            showMessage(`API Error: ${data["error-type"]}.`, 'error');
-            return null;
-        } else {
-            showMessage(`Could not fetch conversion rates for ${baseCurrency}.`, 'error');
+            const errorMsg = data["error-type"] || 'Unknown API Error';
+            showMessage(`API Error: ${errorMsg}. Please check your API key or plan.`, 'error');
             return null;
         }
     } catch (error) {
-        console.error("Error fetching rates for", baseCurrency, ":", error);
-        showMessage(`Failed to fetch live rates for ${baseCurrency}. Check your internet connection or API key.`, 'error');
+        console.error("Error fetching rates:", error);
+        showMessage(`Failed to fetch rates. Check your internet connection.`, 'error');
         return null;
     } finally {
         hideLoading();
@@ -108,12 +166,18 @@ async function fetchConversionRates(baseCurrency) {
 
 async function fetchAndDisplayInitialRate() {
     const selectedSymbol = currencyPairSelect.value;
-    ratePairDisplay.textContent = selectedSymbol.replace(/([A-Z]{3})([A-Z]{3})/, '$1/$2');
-
     const { base, quote } = parseSymbol(selectedSymbol);
-    const conversionRates = await fetchConversionRates(base);
-    if (conversionRates && conversionRates[quote]) {
-        currentRateDisplay.textContent = conversionRates[quote].toFixed(5);
+
+    if (!base || !quote) {
+        currentRateDisplay.textContent = 'N/A';
+        return;
+    }
+
+    ratePairDisplay.textContent = `${base}/${quote}`;
+
+    const rates = await fetchConversionRates(base);
+    if (rates && rates[quote]) {
+        currentRateDisplay.textContent = rates[quote].toFixed(5);
     } else {
         currentRateDisplay.textContent = 'N/A';
     }
@@ -128,6 +192,13 @@ async function calculateMargin() {
     const selectedSymbol = currencyPairSelect.value;
     const tradeSizeUnits = parseFloat(tradeSizeInput.value);
 
+    const assetType = getAssetType(selectedSymbol);
+    if (assetType === 'unknown' || assetType === 'stock' || assetType === 'index' || assetType === 'crypto') {
+        showMessage("This calculator only supports Forex pairs and Metals with the current API.", 'error');
+        hideLoading();
+        return;
+    }
+    
     if (isNaN(tradeSizeUnits) || tradeSizeUnits <= 0) {
         showMessage("Please enter a valid Trade Size (Units).", 'error');
         hideLoading();
@@ -140,7 +211,7 @@ async function calculateMargin() {
     }
 
     const { base: baseCurrencyOfPair, quote: quoteCurrencyOfPair } = parseSymbol(selectedSymbol);
-
+    
     const baseRates = await fetchConversionRates(baseCurrencyOfPair);
     if (!baseRates) {
         requiredMarginDisplay.textContent = 'N/A';
@@ -155,14 +226,17 @@ async function calculateMargin() {
     let marginRequiredInBaseCurrency = (currentPrice * tradeSizeUnits) / leverage;
 
     let finalMarginAmount = marginRequiredInBaseCurrency;
-    let marginBaseCurrency = baseCurrencyOfPair;
     
-    if (marginBaseCurrency !== accountCurrency) {
-        const conversionRates = await fetchConversionRates(marginBaseCurrency);
+    // The margin base currency is not always the pair's base currency (e.g. for USD/JPY, the margin is calculated in USD)
+    let marginCurrency = (assetType === 'forex') ? baseCurrencyOfPair : quoteCurrencyOfPair;
+
+    // We now have the correct base currency, so we can convert it to the account currency
+    if (marginCurrency !== accountCurrency) {
+        const conversionRates = await fetchConversionRates(marginCurrency);
         if (!conversionRates || !conversionRates[accountCurrency]) {
-            showMessage(`Could not fetch conversion rate from ${marginBaseCurrency} to ${accountCurrency}. Margin may be inaccurate.`, 'error');
-            requiredMarginDisplay.textContent = 'N/A';
-            marginCurrencySymbol.textContent = accountCurrency;
+            showMessage(`Could not fetch conversion rate from ${marginCurrency} to ${accountCurrency}. Margin may be inaccurate.`, 'error');
+            requiredMarginDisplay.textContent = finalMarginAmount.toFixed(2);
+            marginCurrencySymbol.textContent = marginCurrency;
             hideLoading();
             return;
         }
@@ -173,17 +247,14 @@ async function calculateMargin() {
     marginCurrencySymbol.textContent = accountCurrency;
 
     const { pipSize, valueLabel, isPipCalculable } = getPipPointDetails(selectedSymbol);
-
+    
     if (isPipCalculable) {
-        let pipPointValue = 0;
-        let pipPointCurrencySymbol = accountCurrency;
-
-        pipPointValue = tradeSizeUnits * pipSize;
+        let pipPointValue = tradeSizeUnits * pipSize;
         
         if (quoteCurrencyOfPair !== accountCurrency) {
             const conversionRates = await fetchConversionRates(quoteCurrencyOfPair);
             if (!conversionRates || !conversionRates[accountCurrency]) {
-                showMessage(`Could not fetch conversion rate for pip value from ${quoteCurrencyOfPair} to ${accountCurrency}.`, 'error');
+                showMessage(`Could not fetch conversion rate for pip/point value from ${quoteCurrencyOfPair} to ${accountCurrency}.`, 'error');
                 pipValueDisplay.textContent = 'N/A';
                 pipValueCurrencySymbol.textContent = '';
                 hideLoading();
@@ -194,13 +265,13 @@ async function calculateMargin() {
         }
 
         pipValueDisplay.textContent = pipPointValue.toFixed(2);
-        pipValueCurrencySymbol.textContent = pipPointCurrencySymbol;
+        pipValueCurrencySymbol.textContent = accountCurrency;
         pipValueRow.style.display = 'flex';
     } else {
         pipValueDisplay.textContent = valueLabel;
         pipValueCurrencySymbol.textContent = '';
         pipValueRow.style.display = 'flex';
     }
-
+    
     hideLoading();
 }
