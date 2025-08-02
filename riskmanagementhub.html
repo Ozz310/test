@@ -7,7 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="style.css"> </head>
+    <link rel="stylesheet" href="style.css">
+</head>
 <body>
     <div class="calculator-container">
         <h1 class="text-3xl font-bold text-center mb-6" style="color: #F0D788;">Risk Management Hub</h1>
@@ -15,125 +16,129 @@
             <span id="messageText"></span>
             <button class="message-box-close" onclick="hideMessage()">&times;</button>
         </div>
-        <div class="api-warning">
-            <p><i class="fas fa-exclamation-triangle"></i> The Margin Calculator uses an external API (TradersMade). Please note its limit of 1000 calls per month to avoid fees.</p>
+        
+        <div class="two-column-layout">
+            <div class="calculator-section margin-calc">
+                <h2 class="text-xl font-bold mb-4" style="color: #F0D788;">1. Margin Calculator</h2>
+                <p class="api-note"><i class="fas fa-info-circle"></i> This section uses an external API.</p>
+                <div class="input-group">
+                    <label for="accountCurrency">Account Currency:</label>
+                    <select id="accountCurrency">
+                        <option value="USD">USD - US Dollar</option>
+                        <option value="EUR">EUR - Euro</option>
+                        <option value="GBP">GBP - British Pound</option>
+                        <option value="JPY">JPY - Japanese Yen</option>
+                        <option value="AUD">AUD - Australian Dollar</option>
+                        <option value="CAD">CAD - Canadian Dollar</option>
+                        <option value="CHF">CHF - Swiss Franc</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="leverage">Leverage:</label>
+                    <select id="leverage">
+                        <option value="1">1:1</option>
+                        <option value="10">1:10</option>
+                        <option value="25">1:25</option>
+                        <option value="50">1:50</option>
+                        <option value="100" selected>1:100</option>
+                        <option value="200">1:200</option>
+                        <option value="400">1:400</option>
+                        <option value="500">1:500</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="currencyPair">Instrument:</label>
+                    <select id="currencyPair">
+                        <optgroup label="Forex (Major)">
+                            <option value="EURUSD">EUR/USD</option>
+                            <option value="GBPUSD">GBP/USD</option>
+                            <option value="USDJPY">USD/JPY</option>
+                            <option value="AUDUSD">AUD/USD</option>
+                            <option value="USDCAD">USD/CAD</option>
+                            <option value="USDCHF">USD/CHF</option>
+                            <option value="NZDUSD">NZD/USD</option>
+                        </optgroup>
+                        <optgroup label="Forex (Crosses)">
+                            <option value="EURGBP">EUR/GBP</option>
+                            <option value="EURJPY">EUR/JPY</option>
+                            <option value="GBPJPY">GBP/JPY</option>
+                            <option value="AUDJPY">AUD/JPY</option>
+                            <option value="EURAUD">EUR/AUD</option>
+                            <option value="CADJPY">CAD/JPY</option>
+                        </optgroup>
+                        <optgroup label="Metals">
+                            <option value="XAUUSD">XAU/USD (Gold)</option>
+                            <option value="XAGUSD">XAG/USD (Silver)</option>
+                        </optgroup>
+                        <optgroup label="Stocks (CFDs - Example)">
+                            <option value="AAPL">AAPL (Apple Inc)</option>
+                            <option value="TSLA">TSLA (Tesla Inc)</option>
+                            <option value="GOOGL">GOOGL (Alphabet Inc)</option>
+                        </optgroup>
+                        <optgroup label="Indices (CFDs - Example)">
+                            <option value="US30">US30 (Dow Jones)</option>
+                            <option value="SPX500">SPX500 (S&P 500)</option>
+                            <option value="NAS100">NAS100 (Nasdaq 100)</option>
+                            <option value="UK100">UK100 (FTSE 100)</option>
+                        </optgroup>
+                        <optgroup label="Cryptocurrencies (CFDs - Example)">
+                            <option value="BTCUSD">BTC/USD (Bitcoin)</option>
+                            <option value="ETHUSD">ETH/USD (Ethereum)</option>
+                            <option value="XRPUSD">XRP/USD (Ripple)</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="tradeSize" id="tradeSizeLabel">Trade Size (Units):</label>
+                    <input type="number" id="tradeSize" value="100000" min="0.01" step="0.01">
+                </div>
+            </div>
+
+            <div class="calculator-section risk-calc">
+                <h2 class="text-xl font-bold mb-4" style="color: #F0D788;">2. Position Size & R/R</h2>
+                <p class="api-note"><i class="fas fa-info-circle"></i> This section works offline.</p>
+                <div class="input-group">
+                    <label for="capital">Total Capital ($):</label>
+                    <input type="number" id="capital" placeholder="e.g., 5000" min="1" step="any">
+                </div>
+                <div class="input-group">
+                    <label for="risk_percent">Risk Per Trade (%):</label>
+                    <input type="number" id="risk_percent" placeholder="e.g., 1 or 2" min="0.1" max="100" step="any">
+                </div>
+                <div class="input-group">
+                    <label for="entry_price">Entry Price:</label>
+                    <input type="number" id="entry_price" placeholder="e.g., 1.25000" min="0.00001" step="any">
+                </div>
+                <div class="input-group">
+                    <label for="stop_loss_price">Stop Loss Price:</label>
+                    <input type="number" id="stop_loss_price" placeholder="e.g., 1.24800" min="0.00001" step="any">
+                </div>
+                <div class="input-group">
+                    <label for="take_profit_price">Take Profit Price:</label>
+                    <input type="number" id="take_profit_price" placeholder="e.g., 1.26000" min="0.00001" step="any">
+                </div>
+            </div>
         </div>
 
-        <div class="calculator-section">
-            <h2 class="text-xl font-bold mb-4" style="color: #F0D788;">1. Margin Calculator (API-Based)</h2>
-            <div class="input-group">
-                <label for="accountCurrency">Account Currency:</label>
-                <select id="accountCurrency">
-                    <option value="USD">USD - US Dollar</option>
-                    <option value="EUR">EUR - Euro</option>
-                    <option value="GBP">GBP - British Pound</option>
-                    <option value="JPY">JPY - Japanese Yen</option>
-                    <option value="AUD">AUD - Australian Dollar</option>
-                    <option value="CAD">CAD - Canadian Dollar</option>
-                    <option value="CHF">CHF - Swiss Franc</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label for="leverage">Leverage:</label>
-                <select id="leverage">
-                    <option value="1">1:1</option>
-                    <option value="10">1:10</option>
-                    <option value="25">1:25</option>
-                    <option value="50">1:50</option>
-                    <option value="100" selected>1:100</option>
-                    <option value="200">1:200</option>
-                    <option value="400">1:400</option>
-                    <option value="500">1:500</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label for="currencyPair">Instrument:</label>
-                <select id="currencyPair">
-                    <optgroup label="Forex (Major)">
-                        <option value="EURUSD">EUR/USD</option>
-                        <option value="GBPUSD">GBP/USD</option>
-                        <option value="USDJPY">USD/JPY</option>
-                        <option value="AUDUSD">AUD/USD</option>
-                        <option value="USDCAD">USD/CAD</option>
-                        <option value="USDCHF">USD/CHF</option>
-                        <option value="NZDUSD">NZD/USD</option>
-                    </optgroup>
-                    <optgroup label="Forex (Crosses)">
-                        <option value="EURGBP">EUR/GBP</option>
-                        <option value="EURJPY">EUR/JPY</option>
-                        <option value="GBPJPY">GBP/JPY</option>
-                        <option value="AUDJPY">AUD/JPY</option>
-                        <option value="EURAUD">EUR/AUD</option>
-                        <option value="CADJPY">CAD/JPY</option>
-                    </optgroup>
-                    <optgroup label="Metals">
-                        <option value="XAUUSD">XAU/USD (Gold)</option>
-                        <option value="XAGUSD">XAG/USD (Silver)</option>
-                    </optgroup>
-                    <optgroup label="Stocks (CFDs - Example)">
-                        <option value="AAPL">AAPL (Apple Inc)</option>
-                        <option value="TSLA">TSLA (Tesla Inc)</option>
-                        <option value="GOOGL">GOOGL (Alphabet Inc)</option>
-                    </optgroup>
-                    <optgroup label="Indices (CFDs - Example)">
-                        <option value="US30">US30 (Dow Jones)</option>
-                        <option value="SPX500">SPX500 (S&P 500)</option>
-                        <option value="NAS100">NAS100 (Nasdaq 100)</option>
-                        <option value="UK100">UK100 (FTSE 100)</option>
-                    </optgroup>
-                    <optgroup label="Cryptocurrencies (CFDs - Example)">
-                        <option value="BTCUSD">BTC/USD (Bitcoin)</option>
-                        <option value="ETHUSD">ETH/USD (Ethereum)</option>
-                        <option value="XRPUSD">XRP/USD (Ripple)</option>
-                    </optgroup>
-                </select>
-            </div>
-            <div class="input-group">
-                <label for="tradeSize" id="tradeSizeLabel">Trade Size (Units):</label>
-                <input type="number" id="tradeSize" value="100000" min="0.01" step="0.01">
-            </div>
-            <button onclick="calculateAll()">
-                <span class="loading-spinner" id="loadingSpinner"></span>
-                Calculate All
-            </button>
-            <div class="result-area" id="resultArea">
-                <p>Current Rate (<span id="ratePairDisplay">EUR/USD</span>): <span id="currentRateDisplay">Fetching...</span></p>
-                <p>Required Margin: <span id="requiredMarginDisplay">0.00</span> <span id="marginCurrencySymbol">USD</span></p>
-                <p id="pipValueRow">Pip/Point Value: <span id="pipValueDisplay">N/A</span> <span id="pipValueCurrencySymbol"></span></p>
-            </div>
-        </div>
+        <button onclick="calculateAll()">
+            <span class="loading-spinner" id="loadingSpinner"></span>
+            Calculate All
+        </button>
 
-        <div class="divider"></div>
-
-        <div class="calculator-section">
-            <h2 class="text-xl font-bold mb-4" style="color: #F0D788;">2. Position Size & Risk/Reward</h2>
-            <p class="api-note"><i class="fas fa-info-circle"></i> This section works offline, with no API calls.</p>
-            <div class="input-group">
-                <label for="capital">Total Capital ($):</label>
-                <input type="number" id="capital" placeholder="e.g., 5000" min="1" step="any">
-            </div>
-            <div class="input-group">
-                <label for="risk_percent">Risk Per Trade (%):</label>
-                <input type="number" id="risk_percent" placeholder="e.g., 1 or 2" min="0.1" max="100" step="any">
-            </div>
-            <div class="input-group">
-                <label for="entry_price">Entry Price:</label>
-                <input type="number" id="entry_price" placeholder="e.g., 1.25000" min="0.00001" step="any">
-            </div>
-            <div class="input-group">
-                <label for="stop_loss_price">Stop Loss Price:</label>
-                <input type="number" id="stop_loss_price" placeholder="e.g., 1.24800" min="0.00001" step="any">
-            </div>
-            <div class="input-group">
-                <label for="take_profit_price">Take Profit Price:</label>
-                <input type="number" id="take_profit_price" placeholder="e.g., 1.26000" min="0.00001" step="any">
-            </div>
-
-            <div class="results" id="posSize_results_output" style="display: none;">
-                <p>Risk Amount: <strong><span id="risk_amount"></span></strong></p>
-                <p>Stop Loss Pips: <strong><span id="stop_loss_pips"></span></strong></p>
-                <p>Recommended Units: <strong><span id="recommended_units"></span></strong></p>
-                <p>Risk/Reward Ratio: <strong><span id="rr_ratio"></span></strong></p>
+        <div class="result-area" id="resultArea">
+            <h2 class="text-xl font-bold mb-4" style="color: #F0D788;">Calculation Results</h2>
+            <div class="results-grid">
+                <div>
+                    <p>Current Rate: (<span id="ratePairDisplay">EUR/USD</span>): <span id="currentRateDisplay">Fetching...</span></p>
+                    <p>Required Margin: <span id="requiredMarginDisplay">0.00</span> <span id="marginCurrencySymbol">USD</span></p>
+                    <p>Pip/Point Value: <span id="pipValueDisplay">N/A</span> <span id="pipValueCurrencySymbol"></span></p>
+                </div>
+                <div>
+                    <p>Risk Amount: <span id="risk_amount"></span></p>
+                    <p>Stop Loss Pips: <span id="stop_loss_pips"></span></p>
+                    <p>Recommended Units: <span id="recommended_units"></span></p>
+                    <p>R/R Ratio: <span id="rr_ratio"></span></p>
+                </div>
             </div>
         </div>
 
@@ -144,7 +149,6 @@
             <p>Powered by The Trader's Gazette</p>
         </div>
     </div>
-
     <script>
         // --- API Keys (API-Based Margin Calculator Only) ---
         const API_KEY = "wsgm72NBgI3iTLj64psT";
@@ -155,6 +159,7 @@
         const leverageSelect = document.getElementById('leverage');
         const currencyPairSelect = document.getElementById('currencyPair');
         const tradeSizeInput = document.getElementById('tradeSize');
+        const tradeSizeLabel = document.getElementById('tradeSizeLabel');
         const ratePairDisplay = document.getElementById('ratePairDisplay');
         const currentRateDisplay = document.getElementById('currentRateDisplay');
         const requiredMarginDisplay = document.getElementById('requiredMarginDisplay');
@@ -165,13 +170,17 @@
         const pipValueRow = document.getElementById('pipValueRow');
         const pipValueDisplay = document.getElementById('pipValueDisplay');
         const pipValueCurrencySymbol = document.getElementById('pipValueCurrencySymbol');
-        const posSizeResultsOutput = document.getElementById('posSize_results_output');
         const capitalInput = document.getElementById('capital');
         const riskPercentInput = document.getElementById('risk_percent');
         const entryPriceInput = document.getElementById('entry_price');
         const stopLossPriceInput = document.getElementById('stop_loss_price');
         const takeProfitPriceInput = document.getElementById('take_profit_price');
-        
+        const resultsArea = document.getElementById('resultArea');
+        const rrRatioDisplay = document.getElementById('rr_ratio');
+        const recommendedUnitsDisplay = document.getElementById('recommended_units');
+        const stopLossPipsDisplay = document.getElementById('stop_loss_pips');
+        const riskAmountDisplay = document.getElementById('risk_amount');
+
         // --- Initial Load ---
         window.onload = fetchAndDisplayInitialRate;
         currencyPairSelect.addEventListener('change', () => {
@@ -245,11 +254,9 @@
             let marginRequiredInBaseCurrency = (currentPrice * tradeSizeUnits) / leverage;
             let marginBaseCurrency = quoteCurrencyOfPair;
             
-            // Simplified Conversion Logic for non-USD accounts
             if (marginBaseCurrency !== accountCurrency) {
-                 // This would require another API call which we will avoid for this tool
-                showMessage(`Cannot convert margin to ${accountCurrency} without a conversion rate. Showing margin in ${marginBaseCurrency}.`, 'error');
-                marginCurrencySymbol.textContent = marginBaseCurrency;
+                 showMessage(`Cannot convert margin to ${accountCurrency} without a conversion rate. Showing margin in ${marginBaseCurrency}.`, 'error');
+                 marginCurrencySymbol.textContent = marginBaseCurrency;
             } else {
                 marginCurrencySymbol.textContent = accountCurrency;
             }
@@ -299,16 +306,15 @@
             
             const recommendedUnits = riskAmount / Math.abs(entryPrice - stopLossPrice);
             
-            // Calculate Risk/Reward Ratio
             let rrRatio = 'N/A';
             if (!isNaN(takeProfitPrice) && takeProfitPrice > 0 && Math.abs(entryPrice - stopLossPrice) !== 0) {
                  rrRatio = (Math.abs(entryPrice - takeProfitPrice) / Math.abs(entryPrice - stopLossPrice)).toFixed(2);
             }
             
-            document.getElementById('risk_amount').textContent = `$${riskAmount.toFixed(2)}`;
-            document.getElementById('stop_loss_pips').textContent = stopLossPips.toFixed(2);
-            document.getElementById('recommended_units').textContent = recommendedUnits.toFixed(2);
-            document.getElementById('rr_ratio').textContent = `1:${rrRatio}`;
+            riskAmountDisplay.textContent = `$${riskAmount.toFixed(2)}`;
+            stopLossPipsDisplay.textContent = stopLossPips.toFixed(2);
+            recommendedUnitsDisplay.textContent = recommendedUnits.toFixed(2);
+            rrRatioDisplay.textContent = `1:${rrRatio}`;
             
             posSizeResultsOutput.style.display = 'block';
         }
@@ -321,15 +327,14 @@
             const selectedSymbol = currencyPairSelect.value;
             const currentPrice = await fetchForexRate(selectedSymbol);
             
-            // Check if API call was successful
             if (currentPrice !== null) {
                 calculateMargin(currentPrice);
             }
             
-            // Always run the risk management calculators (they don't need API)
-            calculateRisk();
+            calculateRisk(currentPrice);
 
             hideLoading();
+            resultsArea.style.display = 'block';
         }
         
         // --- Helper Functions from Original Code (for API Calculator) ---
