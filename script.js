@@ -261,19 +261,18 @@ async function calculateMargin() {
     hideLoading(loadingSpinnerMargin);
 }
 
-// --- Core Logic for Position Size & R/R Calculator ---
+// --- Core Logic for Position Size & Risk/Reward Calculator ---
 function calculateRiskRewardAndPosition() {
     hideMessage();
     showLoading(loadingSpinnerRR);
     resultArea.style.display = 'block';
 
     const capital = parseFloat(capitalInput.value);
-    const riskPercent = parseFloat(riskPercentInput.value);
+    const riskPercent = parseFloat(document.getElementById('riskPercent').value);
     const entryPrice = parseFloat(entryPriceInput.value);
     const stopLossPrice = parseFloat(stopLossPriceInput.value);
     const takeProfitPrice = parseFloat(takeProfitPriceInput.value);
     const selectedSymbol = currencyPairSelect.value;
-    const accountCurrency = accountCurrencySelect.value;
     
     if (isNaN(capital) || isNaN(riskPercent) || isNaN(entryPrice) || isNaN(stopLossPrice)) {
         showMessage("Please enter valid numbers for all fields in the Position Size Calculator.", 'error');
@@ -315,24 +314,15 @@ function calculateRiskRewardAndPosition() {
     
     // Step 3: Calculate Position Size (in units)
     // The value of 1 pip/point is determined by the asset's quote currency
-    const pipValueInQuoteCurrency = (assetType === 'forex' && selectedSymbol.includes('JPY')) ? 100 : (assetType === 'forex' ? 10000 : 1);
-    
     const valuePerUnit = priceDifference;
     let recommendedUnits = riskAmount / valuePerUnit;
 
-    // Adjust for forex pairs to convert to standard lot size units
+    const assetType = getAssetType(selectedSymbol);
     if (assetType === 'forex') {
-        const { quote } = parseSymbol(selectedSymbol);
-        
-        // This is a simplified calculation, as an offline calculator won't have live quote conversion.
-        // It assumes account currency and quote currency are the same.
-        // For a full-featured online calculator, we would need to convert this to the account currency.
-        recommendedUnits = (riskAmount / (priceDifference)) / 100000 * 100000;
-        
+        recommendedUnits = recommendedUnits * 100000;
     }
 
-
-    // Calculate R/R Ratio
+    // Calculate Risk/Reward Ratio
     let rrRatio = 'N/A';
     if (!isNaN(takeProfitPrice) && takeProfitPrice > 0) {
         const riskDistance = Math.abs(entryPrice - stopLossPrice);
