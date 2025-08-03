@@ -10,21 +10,17 @@
 <body>
     <div class="main-widget-container horizontal-layout">
         <h1 class="header-title">Risk Management Hub</h1>
-
-        <div class="main-content-grid">
-            <div class="left-panel">
+        
+        <div class="main-content-wrapper">
+            <div class="input-panel">
                 <div class="calculator-tabs">
                     <button class="tab-button active" onclick="showTab('marginCalculator', this)">1. Margin Calculator</button>
                     <button class="tab-button" onclick="showTab('rrCalculator', this)">2. Position Size & Risk/Reward</button>
                 </div>
-            </div>
-            
-            <div class="middle-panel">
+                
                 <div id="marginCalculator" class="tab-content active">
                     <div class="calculator-container">
-                        <p class="calculator-info">
-                            (i) Rates update EOD
-                        </p>
+                        <p class="calculator-info">(i) Rates update EOD</p>
                         <div class="input-group">
                             <label for="accountCurrency">Account Currency:</label>
                             <select id="accountCurrency">
@@ -138,7 +134,7 @@
                 </div>
             </div>
 
-            <div class="right-panel">
+            <div class="output-panel">
                 <div class="message-box" id="messageBox">
                     <span id="messageText"></span>
                     <button class="message-box-close" onclick="hideMessage()">&times;</button>
