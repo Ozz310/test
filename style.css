@@ -4,7 +4,7 @@ body {
     color: #f0f0f0;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* Aligns content to the top */
+    align-items: center;
     min-height: 100vh;
     margin: 0;
     padding: 20px;
@@ -52,70 +52,91 @@ body::before {
     margin-bottom: 0;
 }
 
-.main-content-wrapper {
+.main-horizontal-layout {
     display: flex;
-    flex-direction: row; /* Main change: horizontal layout */
-    gap: 30px;
-    flex-wrap: wrap; /* Allows wrapping on smaller screens */
+    flex-direction: row;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 @media (max-width: 900px) {
-    .main-content-wrapper {
-        flex-direction: column; /* Stacks vertically on mobile */
+    .main-horizontal-layout {
+        flex-direction: column;
+        align-items: stretch;
     }
 }
 
-.input-panel, .output-panel {
+.controls-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex-basis: 50%; /* Take up half the space */
+    min-width: 300px;
+}
+
+.output-panel {
+    flex-basis: 50%; /* Take up the other half */
+    min-width: 300px;
     background-color: #333;
     padding: 30px;
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     border: 1px solid #4a4a4a;
-    flex: 1; /* Allows panels to grow and fill available space */
-    min-width: 300px; /* Ensures panels don't get too narrow */
-}
-
-.calculator-tabs {
     display: flex;
+    flex-direction: column;
     justify-content: center;
-    gap: 10px;
-    margin-bottom: 20px;
 }
 
-.tab-button {
+/* New switch styling */
+.calculator-switch {
+    display: flex;
+    justify-content: stretch;
     background-color: #4a4a4a;
-    border: none;
+    border-radius: 8px;
+    padding: 5px;
+    border: 1px solid #555;
+    gap: 5px;
+}
+
+.switch-button {
+    flex: 1;
+    background-color: transparent;
     color: #f0f0f0;
-    padding: 12px 24px;
+    border: none;
+    padding: 12px 15px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    border-radius: 8px;
+    border-radius: 6px;
     transition: background-color 0.3s, color 0.3s;
-    flex: 1; /* Distributes buttons evenly */
-    white-space: nowrap;
 }
 
-.tab-button.active {
+.switch-button.active {
     background-color: #F0D788;
     color: #1a1a1a;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-.tab-button:hover:not(.active) {
+.switch-button:hover:not(.active) {
     background-color: #555;
 }
 
-.tab-content {
+/* Calculator content panel */
+.calculator-display {
+    background-color: #333;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    border: 1px solid #4a4a4a;
+}
+
+.calculator-tab {
     display: none;
 }
 
-.tab-content.active {
+.calculator-tab.active {
     display: block;
-}
-
-.calculator-container {
-    padding-top: 0;
 }
 
 .calculator-info {
@@ -324,11 +345,18 @@ input.invalid {
     .header-title {
         font-size: 2rem;
     }
-    .input-panel, .output-panel {
+    .output-panel {
         padding: 20px;
     }
     .results-grid {
         grid-template-columns: 1fr;
+    }
+    .calculator-switch {
+        padding: 0;
+        gap: 0;
+    }
+    .switch-button {
+        border-radius: 6px 6px 0 0;
     }
 }
 
