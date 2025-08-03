@@ -11,13 +11,13 @@
     <div class="main-widget-container compact-layout">
         <h1 class="header-title">Risk Management Hub</h1>
 
-        <div class="top-bar">
-            <button class="toggle-button active" id="marginToggle">1. Margin Calculator</button>
-            <button class="toggle-button" id="rrToggle">2. Position Size & Risk/Reward</button>
+        <div class="calculator-toggle">
+            <button class="toggle-button active" onclick="showCalculator('margin')">1. Margin Calculator</button>
+            <button class="toggle-button" onclick="showCalculator('rr')">2. Position Size & Risk/Reward</button>
         </div>
 
-        <div id="calculatorContent">
-            <div id="marginCalculator" class="calculator-content active">
+        <div id="marginCalculator" class="calculator-panel active">
+            <div class="calculator-content">
                 <p class="calculator-info">
                     (i) Rates update EOD
                 </p>
@@ -75,7 +75,7 @@
                     <span class="loading-spinner" id="loadingSpinnerMargin"></span>
                     Calculate Margin
                 </button>
-                <div class="results-grid">
+                <div id="marginResults" class="results-grid">
                     <div class="result-card" id="cardMarginRate">
                         <p>Current Rate (<span id="ratePairDisplay">EUR/USD</span>):</p>
                         <span id="currentRateDisplay">N/A</span>
@@ -91,8 +91,10 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div id="rrCalculator" class="calculator-content">
+        <div id="rrCalculator" class="calculator-panel">
+            <div class="calculator-content">
                 <div class="input-group">
                     <label for="capital">Total Capital ($):</label>
                     <input type="number" id="capital" value="5000" placeholder="e.g., 5000">
@@ -143,7 +145,7 @@
                     <span class="loading-spinner" id="loadingSpinnerRR"></span>
                     Calculate Risk/Reward & Position
                 </button>
-                <div class="results-grid">
+                <div id="rrResults" class="results-grid">
                     <div class="result-card" id="cardRRRisk">
                         <p>Risk Amount:</p>
                         <span id="riskAmountDisplay">N/A</span>
@@ -170,29 +172,32 @@
         </div>
 
         <div class="branding">
-            <div class="branding-divider"></div>
             <img src="https://raw.githubusercontent.com/Ozz310/TradersGazette/refs/heads/main/calculator/WhatsApp%20Image%202025-06-18%20at%2011.37.15%20(1).jpeg" alt="The Traders Gazette Logo">
             <p>Powered by The Trader's Gazette</p>
         </div>
     </div>
-    
+
     <script src="script.js"></script>
     <script>
-        document.getElementById('marginToggle').addEventListener('click', function() {
-            document.getElementById('marginCalculator').classList.add('active');
-            document.getElementById('rrCalculator').classList.remove('active');
-            this.classList.add('active');
-            document.getElementById('rrToggle').classList.remove('active');
-            resetResults();
-        });
+        function showCalculator(calculatorId) {
+            const marginCalc = document.getElementById('marginCalculator');
+            const rrCalc = document.getElementById('rrCalculator');
+            const marginButton = document.querySelector('.toggle-button:nth-child(1)');
+            const rrButton = document.querySelector('.toggle-button:nth-child(2)');
 
-        document.getElementById('rrToggle').addEventListener('click', function() {
-            document.getElementById('rrCalculator').classList.add('active');
-            document.getElementById('marginCalculator').classList.remove('active');
-            this.classList.add('active');
-            document.getElementById('marginToggle').classList.remove('active');
+            if (calculatorId === 'margin') {
+                marginCalc.classList.add('active');
+                rrCalc.classList.remove('active');
+                marginButton.classList.add('active');
+                rrButton.classList.remove('active');
+            } else {
+                rrCalc.classList.add('active');
+                marginCalc.classList.remove('active');
+                rrButton.classList.add('active');
+                marginButton.classList.remove('active');
+            }
             resetResults();
-        });
+        }
 
         const riskPercentSlider = document.getElementById('riskPercent');
         const riskPercentValueSpan = document.getElementById('riskPercentValue');
