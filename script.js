@@ -219,6 +219,15 @@ async function calculateMargin() {
     showLoading(loadingSpinnerMargin);
     resetResults();
 
+    const selectedSymbol = currencyPairSelect.value;
+    const assetType = getAssetType(selectedSymbol);
+
+    if (assetType !== 'forex') {
+        showMessage("This calculator only supports Forex pairs on the free plan.", 'error');
+        hideLoading(loadingSpinnerMargin);
+        return;
+    }
+
     const inputsToValidate = [tradeSizeInput];
     if (!validateInputs(inputsToValidate)) {
         showMessage("Please check your inputs.", 'error');
@@ -228,15 +237,7 @@ async function calculateMargin() {
 
     const accountCurrency = accountCurrencySelect.value;
     const leverage = parseFloat(leverageSelect.value);
-    const selectedSymbol = currencyPairSelect.value;
     const tradeSizeUnits = parseFloat(tradeSizeInput.value);
-
-    const assetType = getAssetType(selectedSymbol);
-    if (assetType === 'unknown') {
-        showMessage("This calculator only supports Forex pairs and Metals with the current API.", 'error');
-        hideLoading(loadingSpinnerMargin);
-        return;
-    }
 
     const { base: baseCurrencyOfPair, quote: quoteCurrencyOfPair } = parseSymbol(selectedSymbol);
     
@@ -360,15 +361,16 @@ function calculateRiskRewardAndPosition() {
     // Corrected logic for Recommended Units
     let recommendedUnits = 0;
     if (priceDifference > 0) {
-        // Standard forex pip value is $10 per lot (100,000 units), so pip value per unit is $0.0001
-        // For JPY pairs, pip value is $10 per lot (100,000 units), but pip size is 0.01
+        // Assume Pip Value is $10 per standard lot (100,000 units) in the quote currency
+        // The value of one pip/point is dependent on the quote currency.
+        // As this tool is offline for this calculation, we assume the quote currency is USD for a simple proxy.
         let dollarValuePerPip;
-        if (selectedSymbol.includes('JPY')) {
+        if (assetType === 'forex') {
             dollarValuePerPip = 10;
-        } else {
-            dollarValuePerPip = 10;
+        } else if (assetType === 'metal') {
+            dollarValuePerPip = 1; // Assuming $1 per point for Gold/Silver
         }
-        
+
         const dollarRiskPerLot = stopLossPips * dollarValuePerPip;
 
         if (dollarRiskPerLot > 0) {
