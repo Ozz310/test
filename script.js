@@ -50,21 +50,23 @@ currencyPairSelect.addEventListener('change', () => {
 });
 
 // --- Toggle Logic ---
-document.getElementById('marginToggle').addEventListener('click', function() {
-    document.getElementById('marginCalculator').classList.add('active');
-    document.getElementById('rrCalculator').classList.remove('active');
-    document.getElementById('marginToggle').classList.add('active');
-    document.getElementById('rrToggle').classList.remove('active');
-    resetResults();
-});
+function showCalculator(calculatorId) {
+    const panels = document.querySelectorAll('.calculator-panel');
+    panels.forEach(panel => panel.classList.remove('active'));
+    document.getElementById(calculatorId).classList.add('active');
 
-document.getElementById('rrToggle').addEventListener('click', function() {
-    document.getElementById('rrCalculator').classList.add('active');
-    document.getElementById('marginCalculator').classList.remove('active');
-    document.getElementById('rrToggle').classList.add('active');
-    document.getElementById('marginToggle').classList.remove('active');
+    const buttons = document.querySelectorAll('.toggle-button');
+    buttons.forEach(button => button.classList.remove('active'));
+    document.querySelector(`.toggle-button[onclick="showCalculator('${calculatorId}')"]`).classList.add('active');
     resetResults();
-});
+}
+
+const riskPercentSlider = document.getElementById('riskPercent');
+const riskPercentValueSpan = document.getElementById('riskPercentValue');
+
+riskPercentSlider.oninput = function() {
+    riskPercentValueSpan.textContent = this.value;
+}
 
 // --- Message Box Functions ---
 function showMessage(message, type = 'info') {
