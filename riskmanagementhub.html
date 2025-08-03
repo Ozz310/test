@@ -8,18 +8,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="main-widget-container horizontal-layout">
+    <div class="main-widget-container">
         <h1 class="header-title">Risk Management Hub</h1>
         
-        <div class="main-content-wrapper">
-            <div class="input-panel">
-                <div class="calculator-tabs">
-                    <button class="tab-button active" onclick="showTab('marginCalculator', this)">1. Margin Calculator</button>
-                    <button class="tab-button" onclick="showTab('rrCalculator', this)">2. Position Size & Risk/Reward</button>
+        <div class="main-horizontal-layout">
+            <div class="controls-panel">
+                <div class="calculator-switch">
+                    <button class="switch-button active" data-target="marginCalculator">Margin</button>
+                    <button class="switch-button" data-target="rrCalculator">Position & R/R</button>
                 </div>
-                
-                <div id="marginCalculator" class="tab-content active">
-                    <div class="calculator-container">
+
+                <div class="calculator-display">
+                    <div id="marginCalculator" class="calculator-tab active">
                         <p class="calculator-info">(i) Rates update EOD</p>
                         <div class="input-group">
                             <label for="accountCurrency">Account Currency:</label>
@@ -76,10 +76,8 @@
                             Calculate Margin
                         </button>
                     </div>
-                </div>
 
-                <div id="rrCalculator" class="tab-content">
-                    <div class="calculator-container">
+                    <div id="rrCalculator" class="calculator-tab">
                         <div class="input-group">
                             <label for="capital">Total Capital ($):</label>
                             <input type="number" id="capital" value="5000" placeholder="e.g., 5000">
@@ -185,22 +183,40 @@
     
     <script src="script.js"></script>
     <script>
-        function showTab(tabId, button) {
-            const tabs = document.querySelectorAll('.tab-content');
-            tabs.forEach(tab => tab.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to handle the calculator switch
+            const switchButtons = document.querySelectorAll('.switch-button');
+            const calculatorTabs = document.querySelectorAll('.calculator-tab');
 
-            const buttons = document.querySelectorAll('.tab-button');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-        }
-        
-        const riskPercentSlider = document.getElementById('riskPercent');
-        const riskPercentValueSpan = document.getElementById('riskPercentValue');
+            switchButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetTabId = button.getAttribute('data-target');
 
-        riskPercentSlider.oninput = function() {
-            riskPercentValueSpan.textContent = this.value;
-        }
+                    // Remove active class from all buttons and tabs
+                    switchButtons.forEach(btn => btn.classList.remove('active'));
+                    calculatorTabs.forEach(tab => tab.classList.remove('active'));
+
+                    // Add active class to the clicked button and its corresponding tab
+                    button.classList.add('active');
+                    document.getElementById(targetTabId).classList.add('active');
+
+                    // Optional: Reset results when switching tabs
+                    resetResults();
+                });
+            });
+
+            // Initial setup for the risk percent slider
+            const riskPercentSlider = document.getElementById('riskPercent');
+            const riskPercentValueSpan = document.getElementById('riskPercentValue');
+
+            riskPercentSlider.oninput = function() {
+                riskPercentValueSpan.textContent = this.value;
+            };
+
+            // Call the initial functions on load
+            fetchAndDisplayInitialRate();
+            updateTradeSizeLabel();
+        });
     </script>
 </body>
 </html>
