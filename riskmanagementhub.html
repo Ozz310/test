@@ -14,8 +14,8 @@
         <div class="main-horizontal-layout">
             <div class="controls-panel">
                 <div class="calculator-switch">
-                    <button class="switch-button active" data-target="marginCalculator">Margin</button>
-                    <button class="switch-button" data-target="rrCalculator">Position & R/R</button>
+                    <button class="switch-button active" data-target="marginCalculator">1. Margin Calculator</button>
+                    <button class="switch-button" data-target="rrCalculator">2. Position Size & Risk/Reward</button>
                 </div>
 
                 <div class="calculator-display">
@@ -188,34 +188,57 @@
             const switchButtons = document.querySelectorAll('.switch-button');
             const calculatorTabs = document.querySelectorAll('.calculator-tab');
 
+            function handleTabSwitch(targetId) {
+                // Remove active class from all buttons and tabs
+                switchButtons.forEach(btn => btn.classList.remove('active'));
+                calculatorTabs.forEach(tab => tab.classList.remove('active'));
+
+                // Add active class to the correct button and its corresponding tab
+                const targetButton = document.querySelector(`.switch-button[data-target="${targetId}"]`);
+                const targetTab = document.getElementById(targetId);
+
+                if (targetButton && targetTab) {
+                    targetButton.classList.add('active');
+                    targetTab.classList.add('active');
+                }
+
+                // Call the initial functions when switching to the Margin Calculator
+                if (targetId === 'marginCalculator') {
+                    fetchAndDisplayInitialRate();
+                    updateTradeSizeLabel();
+                } else {
+                    // Reset results when switching tabs for a clean start
+                    if (typeof resetResults === 'function') {
+                        resetResults();
+                    }
+                }
+            }
+
+            // Attach event listeners to each switch button
             switchButtons.forEach(button => {
                 button.addEventListener('click', () => {
                     const targetTabId = button.getAttribute('data-target');
-
-                    // Remove active class from all buttons and tabs
-                    switchButtons.forEach(btn => btn.classList.remove('active'));
-                    calculatorTabs.forEach(tab => tab.classList.remove('active'));
-
-                    // Add active class to the clicked button and its corresponding tab
-                    button.classList.add('active');
-                    document.getElementById(targetTabId).classList.add('active');
-
-                    // Optional: Reset results when switching tabs
-                    resetResults();
+                    handleTabSwitch(targetTabId);
                 });
             });
 
-            // Initial setup for the risk percent slider
+            // Handle the risk percent slider
             const riskPercentSlider = document.getElementById('riskPercent');
             const riskPercentValueSpan = document.getElementById('riskPercentValue');
+            if (riskPercentSlider && riskPercentValueSpan) {
+                riskPercentSlider.oninput = function() {
+                    riskPercentValueSpan.textContent = this.value;
+                };
+            }
 
-            riskPercentSlider.oninput = function() {
-                riskPercentValueSpan.textContent = this.value;
-            };
-
-            // Call the initial functions on load
-            fetchAndDisplayInitialRate();
-            updateTradeSizeLabel();
+            // Initial calls on page load
+            handleTabSwitch('marginCalculator'); // Set the default tab
+            if (typeof fetchAndDisplayInitialRate === 'function') {
+                fetchAndDisplayInitialRate();
+            }
+            if (typeof updateTradeSizeLabel === 'function') {
+                updateTradeSizeLabel();
+            }
         });
     </script>
 </body>
