@@ -310,7 +310,7 @@ function calculateRiskRewardAndPosition() {
     showLoading(loadingSpinnerRR);
     resetResults();
 
-    const inputsToValidate = [capitalInput, entryPriceInput, stopLossPriceInput, takeProfitPriceInput];
+    const inputsToValidate = [capitalInput, entryPriceInput, stopLossPriceInput];
     if (!validateInputs(inputsToValidate)) {
         showMessage("Please check your inputs.", 'error');
         hideLoading(loadingSpinnerRR);
@@ -356,13 +356,24 @@ function calculateRiskRewardAndPosition() {
 
     const priceDifference = Math.abs(entryPrice - stopLossPrice);
     const stopLossPips = priceDifference / pipSize;
-    
-    // Step 3: Calculate Position Size (in units)
-    const valuePerUnit = priceDifference;
-    let recommendedUnits = riskAmount / valuePerUnit;
 
-    if (assetType === 'forex') {
-        recommendedUnits = recommendedUnits * 100000;
+    // Corrected logic for Recommended Units
+    let recommendedUnits = 0;
+    if (priceDifference > 0) {
+        // Standard forex pip value is $10 per lot (100,000 units), so pip value per unit is $0.0001
+        // For JPY pairs, pip value is $10 per lot (100,000 units), but pip size is 0.01
+        let dollarValuePerPip;
+        if (selectedSymbol.includes('JPY')) {
+            dollarValuePerPip = 10;
+        } else {
+            dollarValuePerPip = 10;
+        }
+        
+        const dollarRiskPerLot = stopLossPips * dollarValuePerPip;
+
+        if (dollarRiskPerLot > 0) {
+            recommendedUnits = (riskAmount / dollarRiskPerLot) * 100000;
+        }
     }
 
     // Calculate Risk/Reward Ratio
