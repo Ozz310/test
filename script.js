@@ -49,6 +49,23 @@ currencyPairSelect.addEventListener('change', () => {
     updateTradeSizeLabel();
 });
 
+// --- Toggle Logic ---
+document.getElementById('marginToggle').addEventListener('click', function() {
+    document.getElementById('marginCalculator').classList.add('active');
+    document.getElementById('rrCalculator').classList.remove('active');
+    document.getElementById('marginToggle').classList.add('active');
+    document.getElementById('rrToggle').classList.remove('active');
+    resetResults();
+});
+
+document.getElementById('rrToggle').addEventListener('click', function() {
+    document.getElementById('rrCalculator').classList.add('active');
+    document.getElementById('marginCalculator').classList.remove('active');
+    document.getElementById('rrToggle').classList.add('active');
+    document.getElementById('marginToggle').classList.remove('active');
+    resetResults();
+});
+
 // --- Message Box Functions ---
 function showMessage(message, type = 'info') {
     messageText.textContent = message;
