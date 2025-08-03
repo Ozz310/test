@@ -297,7 +297,6 @@ async function calculateMargin() {
         pipValueCurrencySymbol.textContent = '';
     }
     
-    // Add gold shadow to Margin cards
     document.getElementById('cardMarginRate').classList.add('success-border');
     document.getElementById('cardMarginRequired').classList.add('success-border');
     document.getElementById('cardMarginPip').classList.add('success-border');
@@ -344,10 +343,8 @@ function calculateRiskRewardAndPosition() {
         return;
     }
     
-    // Step 1: Define Your Risk (Dollar Amount)
     const riskAmount = capital * (riskPercent / 100);
 
-    // Step 2: Define Your Stop Loss (in pips/points)
     const { pipSize, isPipCalculable } = getPipPointDetails(selectedSymbol);
     if (!isPipCalculable) {
         showMessage("Position sizing is not supported for this asset type.", 'error');
@@ -358,17 +355,13 @@ function calculateRiskRewardAndPosition() {
     const priceDifference = Math.abs(entryPrice - stopLossPrice);
     const stopLossPips = priceDifference / pipSize;
 
-    // Corrected logic for Recommended Units
     let recommendedUnits = 0;
     if (priceDifference > 0) {
-        // Assume Pip Value is $10 per standard lot (100,000 units) in the quote currency
-        // The value of one pip/point is dependent on the quote currency.
-        // As this tool is offline for this calculation, we assume the quote currency is USD for a simple proxy.
         let dollarValuePerPip;
         if (assetType === 'forex') {
             dollarValuePerPip = 10;
         } else if (assetType === 'metal') {
-            dollarValuePerPip = 1; // Assuming $1 per point for Gold/Silver
+            dollarValuePerPip = 1;
         }
 
         const dollarRiskPerLot = stopLossPips * dollarValuePerPip;
@@ -378,7 +371,6 @@ function calculateRiskRewardAndPosition() {
         }
     }
 
-    // Calculate Risk/Reward Ratio
     let rrRatio = 'N/A';
     const riskDistance = Math.abs(entryPrice - stopLossPrice);
     const rewardDistance = Math.abs(entryPrice - takeProfitPrice);
@@ -386,13 +378,11 @@ function calculateRiskRewardAndPosition() {
         rrRatio = (rewardDistance / riskDistance).toFixed(2);
     }
     
-    // Display results
     riskAmountDisplay.textContent = `$${riskAmount.toFixed(2)}`;
     stopLossPipsDisplay.textContent = `${stopLossPips.toFixed(1)} ${assetType === 'forex' ? 'pips' : 'points'}`;
     recommendedUnitsDisplay.textContent = recommendedUnits.toFixed(0);
     rrRatioDisplay.textContent = `1:${rrRatio}`;
 
-    // Add gold shadow to RR cards
     document.getElementById('cardRRRisk').classList.add('success-border');
     document.getElementById('cardRRStopLoss').classList.add('success-border');
     document.getElementById('cardRRUnits').classList.add('success-border');
