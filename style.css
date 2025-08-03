@@ -4,7 +4,7 @@ body {
     color: #f0f0f0;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start; /* Aligns content to the top */
     min-height: 100vh;
     margin: 0;
     padding: 20px;
@@ -39,6 +39,9 @@ body::before {
     max-width: 1200px;
     box-sizing: border-box;
     z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
 }
 
 .header-title {
@@ -46,35 +49,30 @@ body::before {
     font-weight: 700;
     color: #F0D788;
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 0;
 }
 
-.main-content-grid {
-    display: grid;
-    grid-template-columns: 1fr;
+.main-content-wrapper {
+    display: flex;
+    flex-direction: row; /* Main change: horizontal layout */
     gap: 30px;
+    flex-wrap: wrap; /* Allows wrapping on smaller screens */
 }
 
-@media (min-width: 900px) {
-    .main-content-grid {
-        grid-template-columns: 1fr 1fr;
+@media (max-width: 900px) {
+    .main-content-wrapper {
+        flex-direction: column; /* Stacks vertically on mobile */
     }
 }
 
-.left-panel {
+.input-panel, .output-panel {
     background-color: #333;
     padding: 30px;
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     border: 1px solid #4a4a4a;
-}
-
-.right-panel {
-    background-color: #333;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-    border: 1px solid #4a4a4a;
+    flex: 1; /* Allows panels to grow and fill available space */
+    min-width: 300px; /* Ensures panels don't get too narrow */
 }
 
 .calculator-tabs {
@@ -94,6 +92,8 @@ body::before {
     cursor: pointer;
     border-radius: 8px;
     transition: background-color 0.3s, color 0.3s;
+    flex: 1; /* Distributes buttons evenly */
+    white-space: nowrap;
 }
 
 .tab-button.active {
@@ -324,7 +324,7 @@ input.invalid {
     .header-title {
         font-size: 2rem;
     }
-    .left-panel, .right-panel {
+    .input-panel, .output-panel {
         padding: 20px;
     }
     .results-grid {
