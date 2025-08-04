@@ -52,35 +52,53 @@ body::before {
     margin-bottom: 0;
 }
 
-/* New horizontal flexbox for the main content */
 .main-content-flex {
     display: flex;
     flex-direction: row;
     gap: 20px;
-    flex-wrap: wrap; /* Allows wrapping on smaller screens */
-    align-items: stretch; /* All panels will have equal height */
+    flex-wrap: wrap;
+    align-items: stretch;
 }
 
-/* Styling for the three main panels */
-.controls-panel, .calculator-panel, .results-panel {
+.controls-panel {
     background-color: #333;
     padding: 30px;
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     border: 1px solid #4a4a4a;
-    flex: 1; /* All panels grow and shrink to fit space */
-    min-width: 250px;
+    flex: 0 0 250px; /* Fixed width for the switch panel */
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.calculator-panel {
+    background-color: #333;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    border: 1px solid #4a4a4a;
+    flex: 1; /* Calculator panel takes up remaining space */
+}
+
+.results-panel {
+    background-color: #333;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    border: 1px solid #4a4a4a;
+    flex: 1; /* Results panel takes up remaining space */
+    min-width: 300px;
 }
 
 /* Pill-style switch container */
 .calculator-switch {
     display: flex;
+    width: 100%;
     justify-content: stretch;
     background-color: #4a4a4a;
-    border-radius: 8px;
-    padding: 5px;
+    border-radius: 50px; /* Pill shape */
+    padding: 3px;
     border: 1px solid #555;
 }
 
@@ -88,14 +106,14 @@ body::before {
 .switch-button {
     flex: 1;
     background-color: transparent;
-    color: #f0f0f0;
+    color: #b0b0b0;
     border: none;
     padding: 12px 15px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    border-radius: 6px;
-    transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+    border-radius: 50px;
+    transition: all 0.3s ease-in-out;
     white-space: nowrap;
 }
 
@@ -107,6 +125,7 @@ body::before {
 
 .switch-button:hover:not(.active) {
     background-color: #555;
+    color: #f0f0f0;
 }
 
 .calculator-tab {
@@ -225,8 +244,13 @@ button:hover {
 .result-card span {
     font-size: 1.2rem;
     font-weight: 700;
-    color: #F0D788;
+    color: #f0f0f0; /* Default text is light gray */
     display: block;
+}
+
+/* Gold accent for key results */
+.result-card.success-border span {
+    color: #F0D788;
 }
 
 .result-card p.timestamp {
@@ -270,7 +294,6 @@ input.invalid {
     filter: drop-shadow(0 0 15px rgba(240, 215, 136, 0.7));
 }
 
-/* Media query for mobile */
 @media (max-width: 900px) {
     .main-widget-container {
         padding: 20px;
@@ -283,17 +306,13 @@ input.invalid {
     }
     .controls-panel, .calculator-panel, .results-panel {
         padding: 20px;
+        min-width: unset;
+    }
+    .controls-panel {
+        flex: 1;
     }
     .results-grid {
         grid-template-columns: 1fr;
-    }
-    /* Redesigning the switch for mobile */
-    .calculator-switch {
-        flex-direction: row;
-        border-radius: 8px;
-    }
-    .switch-button {
-        padding: 10px 15px;
     }
 }
 
