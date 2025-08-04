@@ -75,7 +75,7 @@
                         <label for="tradeSize" id="tradeSizeLabel">Trade Size (Base Currency Units):</label>
                         <input type="number" id="tradeSize" value="100000" min="0.01" step="0.01">
                     </div>
-                    <button class="menu-button" onclick="calculateMargin()">
+                    <button id="calculateMarginBtn">
                         <span class="loading-spinner" id="loadingSpinnerMargin"></span>
                         Calculate Margin
                     </button>
@@ -127,7 +127,7 @@
                         <label for="takeProfitPrice">Take Profit Price:</label>
                         <input type="number" id="takeProfitPrice" value="1.26000" step="0.00001" placeholder="e.g., 1.26000">
                     </div>
-                    <button class="menu-button" onclick="calculateRiskRewardAndPosition()">
+                    <button id="calculateRRBtn">
                         <span class="loading-spinner" id="loadingSpinnerRR"></span>
                         Calculate Risk/Reward & Position
                     </button>
@@ -186,8 +186,12 @@
     <script src="script.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const switchButtons = document.querySelectorAll('.menu-button');
+            const switchButtons = document.querySelectorAll('.menu-button[data-target]');
             const calculatorTabs = document.querySelectorAll('.calculator-tab');
+            const calculateMarginBtn = document.getElementById('calculateMarginBtn');
+            const calculateRRBtn = document.getElementById('calculateRRBtn');
+            const riskPercentSlider = document.getElementById('riskPercent');
+            const riskPercentValueSpan = document.getElementById('riskPercentValue');
 
             function handleTabSwitch(targetId) {
                 switchButtons.forEach(btn => btn.classList.remove('active'));
@@ -213,8 +217,14 @@
                 });
             });
 
-            const riskPercentSlider = document.getElementById('riskPercent');
-            const riskPercentValueSpan = document.getElementById('riskPercentValue');
+            if (calculateMarginBtn) {
+                calculateMarginBtn.addEventListener('click', calculateMargin);
+            }
+            
+            if (calculateRRBtn) {
+                calculateRRBtn.addEventListener('click', calculateRiskRewardAndPosition);
+            }
+
             if (riskPercentSlider && riskPercentValueSpan) {
                 riskPercentSlider.oninput = function() {
                     riskPercentValueSpan.textContent = this.value;
