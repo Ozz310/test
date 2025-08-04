@@ -178,11 +178,12 @@ async function fetchConversionRates(baseCurrency) {
         const response = await fetch(url);
         const data = await response.json();
         
+        // Improved error handling for API response
         if (data.result === 'success') {
             return data.conversion_rates;
-        } else if (data.result === 'error') {
-            const errorMsg = data["error-type"] || 'Unknown API Error';
-            showMessage(`API Error: ${errorMsg}. Please check your API key or plan.`, 'error');
+        } else {
+            const errorMsg = data['error-type'] || 'Unknown API Error';
+            showMessage(`API Error: ${errorMsg}. Please check your API key or base currency.`, 'error');
             return null;
         }
     } catch (error) {
@@ -194,31 +195,16 @@ async function fetchConversionRates(baseCurrency) {
     }
 }
 
-async function fetchAndDisplayInitialRate() {
-    const selectedSymbol = currencyPairSelect.value;
-    const { base, quote } = parseSymbol(selectedSymbol);
-
-    if (!base || !quote || getAssetType(selectedSymbol) === 'unknown') {
-        currentRateDisplay.textContent = 'N/A';
-        return;
-    }
-
-    ratePairDisplay.textContent = `${base}/${quote}`;
-
-    const rates = await fetchConversionRates(base);
-    if (rates && rates[quote]) {
-        currentRateDisplay.textContent = rates[quote].toFixed(5);
-        timestampMargin.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
-    } else {
-        currentRateDisplay.textContent = 'N/A';
-    }
-}
-
 async function calculateMargin() {
     hideMessage();
+    // NEW: Ensure the calculator tab remains active after the button click
+    const activeTab = document.querySelector('.calculator-tab.active');
+    if (activeTab) {
+        activeTab.classList.add('active');
+    }
+
     showLoading(loadingSpinnerMargin);
     
-    // Reset only the result cards relevant to this calculator
     marginCards.forEach(card => card.classList.remove('success-border'));
 
     const selectedSymbol = currencyPairSelect.value;
@@ -309,9 +295,14 @@ async function calculateMargin() {
 // --- Core Logic for Position Size & Risk/Reward Calculator ---
 async function calculateRiskRewardAndPosition() {
     hideMessage();
+    // NEW: Ensure the calculator tab remains active after the button click
+    const activeTab = document.querySelector('.calculator-tab.active');
+    if (activeTab) {
+        activeTab.classList.add('active');
+    }
+    
     showLoading(loadingSpinnerRR);
     
-    // Reset only the result cards relevant to this calculator
     rrCards.forEach(card => card.classList.remove('success-border'));
     riskAmountDisplay.textContent = 'N/A';
     stopLossPipsDisplay.textContent = 'N/A';
@@ -371,24 +362,18 @@ async function calculateRiskRewardAndPosition() {
         let pipValueInAccount = pipValueInQuote;
 
         if (quoteCurrencyOfPair !== 'USD') {
-             try {
-                 const conversionRates = await fetchConversionRates(quoteCurrencyOfPair);
-                 if (conversionRates && conversionRates['USD']) {
-                    pipValueInAccount = pipValueInQuote * conversionRates['USD'];
-                 } else {
-                    showMessage(`Could not fetch conversion rate for pip/point value.`, 'error');
-                    hideLoading(loadingSpinnerRR);
-                    return;
-                 }
-            } catch (error) {
-                 showMessage(`Failed to fetch conversion rates for calculation.`, 'error');
+             // IMPROVED: Check for successful API response before attempting to access conversion rates
+             const conversionRates = await fetchConversionRates(quoteCurrencyOfPair);
+             if (conversionRates && conversionRates['USD']) {
+                 pipValueInAccount = pipValueInQuote * conversionRates['USD'];
+             } else {
+                 showMessage(`Could not fetch conversion rate from ${quoteCurrencyOfPair} to USD.`, 'error');
                  hideLoading(loadingSpinnerRR);
                  return;
-            }
+             }
         }
         
         if (pipValueInAccount > 0) {
-            // Corrected formula for position sizing
             recommendedUnits = (riskAmount / pipValueInAccount) / stopLossPips;
         }
     }
