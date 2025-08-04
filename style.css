@@ -60,25 +60,58 @@ body::before {
     align-items: stretch;
 }
 
+/* Redesigned Menu-Styled Switch Panel */
 .controls-panel {
     background-color: #333;
-    padding: 30px;
+    padding: 20px;
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     border: 1px solid #4a4a4a;
-    flex: 0 0 250px; /* Fixed width for the switch panel */
+    flex: 0 0 250px; /* Fixed, narrower width */
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    justify-content: flex-start;
 }
 
+.calculator-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.menu-button {
+    background-color: #4a4a4a;
+    color: #f0f0f0;
+    border: 1px solid #555;
+    padding: 15px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 8px;
+    text-align: left;
+    transition: all 0.3s ease;
+}
+
+.menu-button.active {
+    background-color: #F0D788;
+    color: #1a1a1a;
+    border-color: #F0D788;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.menu-button:hover:not(.active) {
+    background-color: #555;
+    color: #F0D788;
+}
+
+/* Calculator Input Panel Styling */
 .calculator-panel {
     background-color: #333;
     padding: 30px;
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     border: 1px solid #4a4a4a;
-    flex: 1; /* Calculator panel takes up remaining space */
+    flex: 1; /* Calculator panel takes up more space */
 }
 
 .results-panel {
@@ -87,45 +120,8 @@ body::before {
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     border: 1px solid #4a4a4a;
-    flex: 1; /* Results panel takes up remaining space */
+    flex: 1.5; /* Results panel is much wider */
     min-width: 300px;
-}
-
-/* Pill-style switch container */
-.calculator-switch {
-    display: flex;
-    width: 100%;
-    justify-content: stretch;
-    background-color: #4a4a4a;
-    border-radius: 50px; /* Pill shape */
-    padding: 3px;
-    border: 1px solid #555;
-}
-
-/* Pill-style switch buttons */
-.switch-button {
-    flex: 1;
-    background-color: transparent;
-    color: #b0b0b0;
-    border: none;
-    padding: 12px 15px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    border-radius: 50px;
-    transition: all 0.3s ease-in-out;
-    white-space: nowrap;
-}
-
-.switch-button.active {
-    background-color: #F0D788;
-    color: #1a1a1a;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-.switch-button:hover:not(.active) {
-    background-color: #555;
-    color: #f0f0f0;
 }
 
 .calculator-tab {
@@ -244,11 +240,10 @@ button:hover {
 .result-card span {
     font-size: 1.2rem;
     font-weight: 700;
-    color: #f0f0f0; /* Default text is light gray */
+    color: #f0f0f0;
     display: block;
 }
 
-/* Gold accent for key results */
 .result-card.success-border span {
     color: #F0D788;
 }
@@ -313,6 +308,10 @@ input.invalid {
     }
     .results-grid {
         grid-template-columns: 1fr;
+    }
+    .calculator-menu {
+        flex-direction: row;
+        gap: 10px;
     }
 }
 
