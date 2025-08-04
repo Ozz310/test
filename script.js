@@ -27,7 +27,7 @@ const capitalInput = document.getElementById('capital');
 const riskPercentInput = document.getElementById('riskPercent');
 const instrumentRRSelect = document.getElementById('instrumentRR');
 const entryPriceInput = document.getElementById('entryPrice');
-const stopLossPriceInput = document = document.getElementById('stopLossPrice');
+const stopLossPriceInput = document.getElementById('stopLossPrice');
 const takeProfitPriceInput = document.getElementById('takeProfitPrice');
 const riskAmountDisplay = document.getElementById('riskAmountDisplay');
 const stopLossPipsDisplay = document.getElementById('stopLossPipsDisplay');
@@ -217,6 +217,9 @@ async function fetchAndDisplayInitialRate() {
 async function calculateMargin() {
     hideMessage();
     showLoading(loadingSpinnerMargin);
+    
+    // Reset only the result cards relevant to this calculator
+    marginCards.forEach(card => card.classList.remove('success-border'));
 
     const selectedSymbol = currencyPairSelect.value;
     const assetType = getAssetType(selectedSymbol);
@@ -308,7 +311,7 @@ async function calculateRiskRewardAndPosition() {
     hideMessage();
     showLoading(loadingSpinnerRR);
     
-    // Clear old RR results
+    // Reset only the result cards relevant to this calculator
     rrCards.forEach(card => card.classList.remove('success-border'));
     riskAmountDisplay.textContent = 'N/A';
     stopLossPipsDisplay.textContent = 'N/A';
@@ -360,16 +363,15 @@ async function calculateRiskRewardAndPosition() {
     const priceDifference = Math.abs(entryPrice - stopLossPrice);
     const stopLossPips = priceDifference / pipSize;
 
-    // Corrected logic for calculating recommended units
     let recommendedUnits = 0;
     if (priceDifference > 0) {
-        const { base: baseCurrencyOfPair, quote: quoteCurrencyOfPair } = parseSymbol(selectedSymbol);
+        const { quote: quoteCurrencyOfPair } = parseSymbol(selectedSymbol);
         
         let pipValueInQuote = pipSize * 1;
         let pipValueInAccount = pipValueInQuote;
 
-        try {
-            if (quoteCurrencyOfPair !== 'USD') {
+        if (quoteCurrencyOfPair !== 'USD') {
+             try {
                  const conversionRates = await fetchConversionRates(quoteCurrencyOfPair);
                  if (conversionRates && conversionRates['USD']) {
                     pipValueInAccount = pipValueInQuote * conversionRates['USD'];
@@ -378,17 +380,16 @@ async function calculateRiskRewardAndPosition() {
                     hideLoading(loadingSpinnerRR);
                     return;
                  }
+            } catch (error) {
+                 showMessage(`Failed to fetch conversion rates for calculation.`, 'error');
+                 hideLoading(loadingSpinnerRR);
+                 return;
             }
-        } catch (error) {
-             showMessage(`Failed to fetch conversion rates for calculation.`, 'error');
-             hideLoading(loadingSpinnerRR);
-             return;
         }
         
         if (pipValueInAccount > 0) {
-            // Corrected formula: riskAmount / (stopLossPips * pipValueInAccount) * 100000;
-            // The logic was double-counting pips, so the formula is simplified.
-            recommendedUnits = riskAmount / (stopLossPips * pipValueInAccount);
+            // Corrected formula for position sizing
+            recommendedUnits = (riskAmount / pipValueInAccount) / stopLossPips;
         }
     }
 
