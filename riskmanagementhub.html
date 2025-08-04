@@ -13,9 +13,9 @@
         
         <div class="main-content-flex">
             <div class="controls-panel">
-                <div class="calculator-switch">
-                    <button class="switch-button active" data-target="marginCalculator">Margin Calculator</button>
-                    <button class="switch-button" data-target="rrCalculator">Position Size & R/R</button>
+                <div class="calculator-menu">
+                    <button class="menu-button active" data-target="marginCalculator">Margin Calculator</button>
+                    <button class="menu-button" data-target="rrCalculator">Position Size & R/R</R/R></button>
                 </div>
             </div>
 
@@ -56,7 +56,6 @@
                                 <option value="AUDUSD">AUD/USD</option>
                                 <option value="USDCAD">USD/CAD</option>
                                 <option value="USDCHF">USD/CHF</option>
-                                <option value="NZDUSD">NZD/USD</option>
                             </optgroup>
                             <optgroup label="Forex (Crosses)">
                                 <option value="EURGBP">EUR/GBP</option>
@@ -183,14 +182,14 @@
     <script src="script.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const switchButtons = document.querySelectorAll('.switch-button');
+            const switchButtons = document.querySelectorAll('.menu-button');
             const calculatorTabs = document.querySelectorAll('.calculator-tab');
 
             function handleTabSwitch(targetId) {
                 switchButtons.forEach(btn => btn.classList.remove('active'));
                 calculatorTabs.forEach(tab => tab.classList.remove('active'));
 
-                const targetButton = document.querySelector(`.switch-button[data-target="${targetId}"]`);
+                const targetButton = document.querySelector(`.menu-button[data-target="${targetId}"]`);
                 const targetTab = document.getElementById(targetId);
 
                 if (targetButton && targetTab) {
