@@ -84,6 +84,21 @@ function resetResults() {
     rrRatioDisplay.textContent = 'N/A';
 }
 
+
+// NEW: Function to show/hide result cards based on active calculator
+function showRelevantResults(calculatorType) {
+    // First, hide all cards
+    allResultCards.forEach(card => card.style.display = 'none');
+    
+    // Then, show only the relevant ones
+    if (calculatorType === 'margin') {
+        marginCards.forEach(card => card.style.display = 'block');
+    } else if (calculatorType === 'rr') {
+        rrCards.forEach(card => card.style.display = 'block');
+    }
+}
+
+
 function validateInputs(inputs) {
     let isValid = true;
     inputs.forEach(input => {
@@ -178,7 +193,6 @@ async function fetchConversionRates(baseCurrency) {
         const response = await fetch(url);
         const data = await response.json();
         
-        // Improved error handling for API response
         if (data.result === 'success') {
             return data.conversion_rates;
         } else {
@@ -197,12 +211,14 @@ async function fetchConversionRates(baseCurrency) {
 
 async function calculateMargin() {
     hideMessage();
-    // NEW: Ensure the calculator tab remains active after the button click
-    const activeTab = document.querySelector('.calculator-tab.active');
+    // Re-apply active class to prevent vanishing
+    const activeTab = document.getElementById('marginCalculator');
     if (activeTab) {
         activeTab.classList.add('active');
     }
-
+    // NEW: Show only the result cards for the margin calculator
+    showRelevantResults('margin');
+    
     showLoading(loadingSpinnerMargin);
     
     marginCards.forEach(card => card.classList.remove('success-border'));
@@ -295,11 +311,13 @@ async function calculateMargin() {
 // --- Core Logic for Position Size & Risk/Reward Calculator ---
 async function calculateRiskRewardAndPosition() {
     hideMessage();
-    // NEW: Ensure the calculator tab remains active after the button click
-    const activeTab = document.querySelector('.calculator-tab.active');
+    // Re-apply active class to prevent vanishing
+    const activeTab = document.getElementById('rrCalculator');
     if (activeTab) {
         activeTab.classList.add('active');
     }
+    // NEW: Show only the result cards for the R/R calculator
+    showRelevantResults('rr');
     
     showLoading(loadingSpinnerRR);
     
@@ -362,7 +380,6 @@ async function calculateRiskRewardAndPosition() {
         let pipValueInAccount = pipValueInQuote;
 
         if (quoteCurrencyOfPair !== 'USD') {
-             // IMPROVED: Check for successful API response before attempting to access conversion rates
              const conversionRates = await fetchConversionRates(quoteCurrencyOfPair);
              if (conversionRates && conversionRates['USD']) {
                  pipValueInAccount = pipValueInQuote * conversionRates['USD'];
