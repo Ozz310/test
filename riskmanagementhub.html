@@ -1,228 +1,437 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Traders Gazette - Risk Management Hub</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-</head>
-<body>
-    <div class="main-widget-container">
-        <h1 class="header-title">Risk Management Hub</h1>
-        
-        <div class="main-content-flex">
-            <div class="controls-panel">
-                <div class="calculator-menu">
-                    <button class="menu-button active" data-target="marginCalculator">
-                        Margin Calculator
-                    </button>
-                    <button class="menu-button" data-target="rrCalculator">
-                        Position Size & R/R
-                    </button>
-                </div>
-            </div>
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #FFFFFF;
+    color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+}
 
-            <div class="calculator-panel">
-                <div id="marginCalculator" class="calculator-tab active">
-                    <p class="calculator-info">(i) Rates update EOD</p>
-                    <div class="input-group">
-                        <label for="accountCurrency">Account Currency:</label>
-                        <select id="accountCurrency">
-                            <option value="USD" selected>USD - US Dollar</option>
-                            <option value="EUR">EUR - Euro</option>
-                            <option value="GBP">GBP - British Pound</option>
-                            <option value="JPY">JPY - Japanese Yen</option>
-                            <option value="AUD">AUD - Australian Dollar</option>
-                            <option value="CAD">CAD - Canadian Dollar</option>
-                            <option value="CHF">CHF - Swiss Franc</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label for="leverage">Leverage:</label>
-                        <select id="leverage">
-                            <option value="10">1:10</option>
-                            <option value="25">1:25</option>
-                            <option value="50">1:50</option>
-                            <option value="100">1:100</option>
-                            <option value="200">1:200</option>
-                            <option value="400">1:400</option>
-                            <option value="500" selected>1:500</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label for="currencyPair">Instrument:</label>
-                        <select id="currencyPair">
-                            <optgroup label="Forex (Major)">
-                                <option value="EURUSD" selected>EUR/USD</option>
-                                <option value="GBPUSD">GBP/USD</option>
-                                <option value="USDJPY">USD/JPY</option>
-                                <option value="AUDUSD">AUD/USD</option>
-                                <option value="USDCAD">USD/CAD</option>
-                                <option value="USDCHF">USD/CHF</option>
-                            </optgroup>
-                            <optgroup label="Forex (Crosses)">
-                                <option value="EURGBP">EUR/GBP</option>
-                                <option value="EURJPY">EUR/JPY</option>
-                                <option value="GBPJPY">GBP/JPY</option>
-                                <option value="AUDJPY">AUD/JPY</option>
-                                <option value="EURAUD">EUR/AUD</option>
-                                <option value="CADJPY">CAD/JPY</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label for="tradeSize" id="tradeSizeLabel">Trade Size (Base Currency Units):</label>
-                        <input type="number" id="tradeSize" value="100000" min="0.01" step="0.01">
-                    </div>
-                    <button class="menu-button" onclick="calculateMargin()">
-                        <span class="loading-spinner" id="loadingSpinnerMargin"></span>
-                        Calculate Margin
-                    </button>
-                </div>
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        radial-gradient(circle at 15% 50%, rgba(240, 215, 136, 0.01) 0%, transparent 60%),
+        radial-gradient(circle at 85% 50%, rgba(240, 215, 136, 0.01) 0%, transparent 60%),
+        repeating-linear-gradient(0deg, rgba(240, 215, 136, 0.005) 0px, rgba(240, 215, 136, 0.005) 1px, transparent 1px, transparent 100px),
+        repeating-linear-gradient(90deg, rgba(240, 215, 136, 0.005) 0px, rgba(240, 215, 136, 0.005) 1px, transparent 1px, transparent 100px);
+    background-size: 100% 100%, 100% 100%, 100px 100px, 100px 100px;
+    opacity: 0.8;
+    z-index: -1;
+}
 
-                <div id="rrCalculator" class="calculator-tab">
-                    <div class="input-group">
-                        <label for="capital">Total Capital ($):</label>
-                        <input type="number" id="capital" value="5000" placeholder="e.g., 5000">
-                    </div>
-                    <div class="input-group">
-                        <label for="riskPercent">Risk Per Trade (%): <span id="riskPercentValue">2</span></label>
-                        <input type="range" id="riskPercent" min="0.1" max="10" value="2" step="0.1">
-                    </div>
-                    <div class="input-group">
-                        <label for="instrumentRR">Instrument:</label>
-                        <select id="instrumentRR">
-                            <optgroup label="Forex (Major)">
-                                <option value="EURUSD" selected>EUR/USD</option>
-                                <option value="GBPUSD">GBP/USD</option>
-                                <option value="USDJPY">USD/JPY</option>
-                                <option value="AUDUSD">AUD/USD</option>
-                                <option value="USDCAD">USD/CAD</option>
-                                <option value="USDCHF">USD/CHF</option>
-                            </optgroup>
-                            <optgroup label="Forex (Crosses)">
-                                <option value="EURGBP">EUR/GBP</option>
-                                <option value="EURJPY">EUR/JPY</option>
-                                <option value="GBPJPY">GBP/JPY</option>
-                                <option value="AUDJPY">AUD/JPY</option>
-                                <option value="EURAUD">EUR/AUD</option>
-                                <option value="CADJPY">CAD/JPY</option>
-                            </optgroup>
-                            <optgroup label="Metals">
-                                <option value="XAUUSD">XAU/USD (Gold)</option>
-                                <option value="XAGUSD">XAG/USD (Silver)</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label for="entryPrice">Entry Price:</label>
-                        <input type="number" id="entryPrice" value="1.25000" step="0.00001" placeholder="e.g., 1.25000">
-                    </div>
-                    <div class="input-group">
-                        <label for="stopLossPrice">Stop Loss Price:</label>
-                        <input type="number" id="stopLossPrice" value="1.24800" step="0.00001" placeholder="e.g., 1.24800">
-                    </div>
-                    <div class="input-group">
-                        <label for="takeProfitPrice">Take Profit Price:</label>
-                        <input type="number" id="takeProfitPrice" value="1.26000" step="0.00001" placeholder="e.g., 1.26000">
-                    </div>
-                    <button class="menu-button" onclick="calculateRiskRewardAndPosition()">
-                        <span class="loading-spinner" id="loadingSpinnerRR"></span>
-                        Calculate Risk/Reward & Position
-                    </button>
-                </div>
-            </div>
+.main-widget-container {
+    background-color: #2a2a2a;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(240, 215, 136, 0.1);
+    width: 100%;
+    max-width: 1200px;
+    box-sizing: border-box;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 
-            <div class="results-panel">
-                <div class="message-box" id="messageBox">
-                    <span id="messageText"></span>
-                    <button class="message-box-close" onclick="hideMessage()">&times;</button>
-                </div>
-                <div class="result-area" id="resultArea">
-                    <h3 class="result-title">Calculation Results</h3>
-                    <div class="results-grid">
-                        <div class="result-card" id="cardMarginRate">
-                            <p>Current Rate (<span id="ratePairDisplay">EUR/USD</span>):</p>
-                            <span id="currentRateDisplay">N/A</span>
-                            <p class="timestamp" id="timestampMargin"></p>
-                        </div>
-                        <div class="result-card" id="cardMarginRequired">
-                            <p>Required Margin:</p>
-                            <span id="requiredMarginDisplay">N/A</span> <span id="marginCurrencySymbol"></span>
-                        </div>
-                        <div class="result-card" id="cardMarginPip">
-                            <p>Pip/Point Value:</p>
-                            <span id="pipValueDisplay">N/A</span> <span id="pipValueCurrencySymbol"></span>
-                        </div>
-                        <div class="result-card" id="cardRRRisk">
-                            <p>Risk Amount:</p>
-                            <span id="riskAmountDisplay">N/A</span>
-                        </div>
-                        <div class="result-card" id="cardRRStopLoss">
-                            <p>Stop Loss (Pips/Points):</p>
-                            <span id="stopLossPipsDisplay">N/A</span>
-                        </div>
-                        <div class="result-card" id="cardRRUnits">
-                            <p>Recommended Units:</p>
-                            <span id="recommendedUnitsDisplay">N/A</span>
-                        </div>
-                        <div class="result-card" id="cardRRRatio">
-                            <p>Risk/Reward Ratio:</p>
-                            <span id="rrRatioDisplay">N/A</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+.header-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #F0D788;
+    text-align: center;
+    margin-bottom: 0;
+}
 
-        <div class="branding">
-            <div class="branding-divider"></div>
-            <img src="https://raw.githubusercontent.com/Ozz310/TradersGazette/refs/heads/main/calculator/WhatsApp%20Image%202025-06-18%20at%2011.37.15%20(1).jpeg" alt="The Traders Gazette Logo">
-            <p>Powered by The Trader's Gazette</p>
-        </div>
-    </div>
-    
-    <script src="script.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const switchButtons = document.querySelectorAll('.menu-button');
-            const calculatorTabs = document.querySelectorAll('.calculator-tab');
+.main-content-flex {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: stretch;
+}
 
-            function handleTabSwitch(targetId) {
-                switchButtons.forEach(btn => btn.classList.remove('active'));
-                calculatorTabs.forEach(tab => tab.classList.remove('active'));
+.controls-panel {
+    background-color: #333;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    border: 1px solid #4a4a4a;
+    flex: 0 0 250px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
 
-                const targetButton = document.querySelector(`.menu-button[data-target="${targetId}"]`);
-                const targetTab = document.getElementById(targetId);
+.calculator-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 
-                if (targetButton && targetTab) {
-                    targetButton.classList.add('active');
-                    targetTab.classList.add('active');
-                }
+.menu-button {
+    background: #4a4a4a;
+    background: linear-gradient(145deg, #4a4a4a, #3c3c3c);
+    color: #f0f0f0;
+    border: 1px solid #555;
+    padding: 15px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 8px;
+    text-align: left;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.4), 0 2px 5px rgba(0,0,0,0.3);
+}
 
-                if (typeof resetResults === 'function') {
-                    resetResults();
-                }
-            }
+.menu-button.active {
+    background: #F0D788;
+    background: linear-gradient(145deg, #F0D788, #DDAA33);
+    color: #1a1a1a;
+    border-color: #F0D788;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.4), 0 4px 10px rgba(0, 0, 0, 0.4);
+}
 
-            switchButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const targetTabId = button.getAttribute('data-target');
-                    handleTabSwitch(targetTabId);
-                });
-            });
+.menu-button:hover:not(.active) {
+    background: #555;
+    background: linear-gradient(145deg, #555, #4a4a4a);
+    color: #F0D788;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.4), 0 2px 5px rgba(0,0,0,0.3);
+}
 
-            const riskPercentSlider = document.getElementById('riskPercent');
-            const riskPercentValueSpan = document.getElementById('riskPercentValue');
-            if (riskPercentSlider && riskPercentValueSpan) {
-                riskPercentSlider.oninput = function() {
-                    riskPercentValueSpan.textContent = this.value;
-                };
-            }
+.calculator-panel {
+    background-color: #333;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    border: 1px solid #4a4a4a;
+    flex: 1;
+}
 
-            handleTabSwitch('marginCalculator');
-        });
-    </script>
-</body>
-</html>
+.results-panel {
+    background-color: #333;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    border: 1px solid #4a4a4a;
+    flex: 2;
+    min-width: 300px;
+}
+
+.calculator-tab {
+    display: none;
+}
+
+.calculator-tab.active {
+    display: block;
+}
+
+.calculator-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #b0b0b0;
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: #4a4a4a;
+    border-radius: 8px;
+}
+
+.input-group {
+    margin-bottom: 10px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #f0f0f0;
+    font-size: 0.95rem;
+}
+
+input[type="number"], select, input[type="range"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #555;
+    border-radius: 8px;
+    background-color: #4a4a4a;
+    color: #f0f0f0;
+    font-size: 1rem;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input[type="number"]:focus, select:focus, input[type="range"]:focus {
+    outline: none;
+    border-color: #F0D788;
+    box-shadow: 0 0 0 3px rgba(240, 215, 136, 0.4);
+}
+
+.calculator-panel .menu-button {
+    width: 100%;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.calculator-panel .menu-button.active {
+    background: linear-gradient(145deg, #4a4a4a, #3c3c3c);
+    color: #f0f0f0;
+    border: 1px solid #555;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.4), 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.calculator-panel .menu-button:hover {
+    background: linear-gradient(145deg, #F0D788, #DDAA33);
+    color: #1a1a1a;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
+}
+
+.message-box {
+    display: none;
+    background-color: #333;
+    color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 0.95rem;
+    word-break: break-word;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border: none;
+}
+
+.message-box.show {
+    display: flex;
+}
+
+.message-box-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.4rem;
+    cursor: pointer;
+    padding: 0 5px;
+    line-height: 1;
+}
+
+.loading-spinner {
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid #F0D788;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+    display: none;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.result-area {
+    padding-top: 5px;
+}
+
+.result-title {
+    color: #F0D788;
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.result-card {
+    background-color: #4a4a4a;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid #4a4a4a;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.result-card.success-border {
+    border-color: #F0D788;
+    box-shadow: 0 0 8px rgba(240, 215, 136, 0.4);
+}
+
+.result-card p {
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+    color: #b0b0b0;
+}
+
+.result-card span {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #f0f0f0;
+    display: block;
+}
+
+.result-card.success-border span {
+    color: #F0D788;
+}
+
+.result-card p.timestamp {
+    font-size: 0.7rem;
+    color: #999;
+    margin-top: 5px;
+}
+
+input.invalid {
+    border-color: #d32f2f !important;
+    box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.4) !important;
+}
+
+.branding {
+    margin-top: 10px;
+    padding-top: 10px;
+    text-align: center;
+    color: #b0b0b0;
+    font-size: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.branding-divider {
+    width: 100%;
+    height: 1px;
+    background-color: #4a4a4a;
+    margin-bottom: 5px;
+}
+
+.branding img {
+    max-width: 150px;
+    height: auto;
+    filter: drop-shadow(0 0 10px rgba(240, 215, 136, 0.4));
+    transition: filter 0.3s ease;
+}
+
+.branding img:hover {
+    filter: drop-shadow(0 0 15px rgba(240, 215, 136, 0.7));
+}
+
+@media (max-width: 900px) {
+    .main-widget-container {
+        padding: 10px;
+        gap: 10px;
+    }
+    .header-title {
+        font-size: 2rem;
+    }
+    .main-content-flex {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .controls-panel, .calculator-panel, .results-panel {
+        padding: 15px;
+        min-width: unset;
+        gap: 10px;
+    }
+    .controls-panel {
+        flex: 1;
+    }
+    .results-grid {
+        grid-template-columns: 1fr;
+    }
+    .calculator-menu {
+        flex-direction: row;
+        gap: 10px;
+    }
+    .branding {
+        margin-top: 10px;
+    }
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 10px;
+    background: #4a4a4a;
+    border-radius: 5px;
+    outline: none;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #F0D788;
+    cursor: pointer;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    background: #DDAA33;
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #F0D788;
+    cursor: pointer;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    border: none;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+    background: #DDAA33;
+}
+
+input[type="range"]::-ms-thumb {
+    width: 20px;
+    height: 20px;
+    background: #F0D788;
+    cursor: pointer;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    border: none;
+}
+
+input[type="range"]::-ms-thumb:hover {
+    background: #DDAA33;
+}
+
+input[type="range"]::-ms-track {
+    background: #4a4a4a;
+    color: transparent;
+    border-radius: 5px;
+}
+
+input[type="range"]::-moz-range-track {
+    background: #4a4a4a;
+    border-radius: 5px;
+}
