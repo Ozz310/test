@@ -49,25 +49,6 @@ currencyPairSelect.addEventListener('change', () => {
     updateTradeSizeLabel();
 });
 
-// --- Toggle Logic ---
-function showCalculator(calculatorId) {
-    const panels = document.querySelectorAll('.calculator-panel');
-    panels.forEach(panel => panel.classList.remove('active'));
-    document.getElementById(calculatorId).classList.add('active');
-
-    const buttons = document.querySelectorAll('.toggle-button');
-    buttons.forEach(button => button.classList.remove('active'));
-    document.querySelector(`.toggle-button[onclick="showCalculator('${calculatorId}')"]`).classList.add('active');
-    resetResults();
-}
-
-const riskPercentSlider = document.getElementById('riskPercent');
-const riskPercentValueSpan = document.getElementById('riskPercentValue');
-
-riskPercentSlider.oninput = function() {
-    riskPercentValueSpan.textContent = this.value;
-}
-
 // --- Message Box Functions ---
 function showMessage(message, type = 'info') {
     messageText.textContent = message;
@@ -236,7 +217,6 @@ async function fetchAndDisplayInitialRate() {
 async function calculateMargin() {
     hideMessage();
     showLoading(loadingSpinnerMargin);
-    resetResults();
 
     const selectedSymbol = currencyPairSelect.value;
     const assetType = getAssetType(selectedSymbol);
@@ -324,10 +304,9 @@ async function calculateMargin() {
 }
 
 // --- Core Logic for Position Size & Risk/Reward Calculator ---
-function calculateRiskRewardAndPosition() {
+async function calculateRiskRewardAndPosition() {
     hideMessage();
     showLoading(loadingSpinnerRR);
-    resetResults();
 
     const inputsToValidate = [capitalInput, entryPriceInput, stopLossPriceInput];
     if (!validateInputs(inputsToValidate)) {
@@ -374,19 +353,28 @@ function calculateRiskRewardAndPosition() {
     const priceDifference = Math.abs(entryPrice - stopLossPrice);
     const stopLossPips = priceDifference / pipSize;
 
+    // Corrected logic for calculating recommended units
     let recommendedUnits = 0;
     if (priceDifference > 0) {
-        let dollarValuePerPip;
-        if (assetType === 'forex') {
-            dollarValuePerPip = 10;
-        } else if (assetType === 'metal') {
-            dollarValuePerPip = 1;
+        // Fetch current rate to calculate pip value in account currency
+        const { base: baseCurrencyOfPair, quote: quoteCurrencyOfPair } = parseSymbol(selectedSymbol);
+        
+        let pipValueInQuote = pipSize * 1; // Base pip value is 1 unit of quote currency
+        let pipValueInAccount = pipValueInQuote;
+
+        if (quoteCurrencyOfPair !== 'USD') {
+             const conversionRates = await fetchConversionRates(quoteCurrencyOfPair);
+             if (conversionRates && conversionRates['USD']) {
+                pipValueInAccount = pipValueInQuote * conversionRates['USD'];
+             } else {
+                showMessage(`Could not fetch conversion rate for pip/point value from ${quoteCurrencyOfPair} to USD.`, 'error');
+                hideLoading(loadingSpinnerRR);
+                return;
+             }
         }
-
-        const dollarRiskPerLot = stopLossPips * dollarValuePerPip;
-
-        if (dollarRiskPerLot > 0) {
-            recommendedUnits = (riskAmount / dollarRiskPerLot) * 100000;
+        
+        if (pipValueInAccount > 0) {
+            recommendedUnits = (riskAmount / (stopLossPips * pipValueInAccount)) * 100000;
         }
     }
 
