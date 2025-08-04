@@ -27,7 +27,7 @@ const capitalInput = document.getElementById('capital');
 const riskPercentInput = document.getElementById('riskPercent');
 const instrumentRRSelect = document.getElementById('instrumentRR');
 const entryPriceInput = document.getElementById('entryPrice');
-const stopLossPriceInput = document.getElementById('stopLossPrice');
+const stopLossPriceInput = document = document.getElementById('stopLossPrice');
 const takeProfitPriceInput = document.getElementById('takeProfitPrice');
 const riskAmountDisplay = document.getElementById('riskAmountDisplay');
 const stopLossPipsDisplay = document.getElementById('stopLossPipsDisplay');
@@ -307,6 +307,13 @@ async function calculateMargin() {
 async function calculateRiskRewardAndPosition() {
     hideMessage();
     showLoading(loadingSpinnerRR);
+    
+    // Clear old RR results
+    rrCards.forEach(card => card.classList.remove('success-border'));
+    riskAmountDisplay.textContent = 'N/A';
+    stopLossPipsDisplay.textContent = 'N/A';
+    recommendedUnitsDisplay.textContent = 'N/A';
+    rrRatioDisplay.textContent = 'N/A';
 
     const inputsToValidate = [capitalInput, entryPriceInput, stopLossPriceInput];
     if (!validateInputs(inputsToValidate)) {
@@ -356,25 +363,32 @@ async function calculateRiskRewardAndPosition() {
     // Corrected logic for calculating recommended units
     let recommendedUnits = 0;
     if (priceDifference > 0) {
-        // Fetch current rate to calculate pip value in account currency
         const { base: baseCurrencyOfPair, quote: quoteCurrencyOfPair } = parseSymbol(selectedSymbol);
         
-        let pipValueInQuote = pipSize * 1; // Base pip value is 1 unit of quote currency
+        let pipValueInQuote = pipSize * 1;
         let pipValueInAccount = pipValueInQuote;
 
-        if (quoteCurrencyOfPair !== 'USD') {
-             const conversionRates = await fetchConversionRates(quoteCurrencyOfPair);
-             if (conversionRates && conversionRates['USD']) {
-                pipValueInAccount = pipValueInQuote * conversionRates['USD'];
-             } else {
-                showMessage(`Could not fetch conversion rate for pip/point value from ${quoteCurrencyOfPair} to USD.`, 'error');
-                hideLoading(loadingSpinnerRR);
-                return;
-             }
+        try {
+            if (quoteCurrencyOfPair !== 'USD') {
+                 const conversionRates = await fetchConversionRates(quoteCurrencyOfPair);
+                 if (conversionRates && conversionRates['USD']) {
+                    pipValueInAccount = pipValueInQuote * conversionRates['USD'];
+                 } else {
+                    showMessage(`Could not fetch conversion rate for pip/point value.`, 'error');
+                    hideLoading(loadingSpinnerRR);
+                    return;
+                 }
+            }
+        } catch (error) {
+             showMessage(`Failed to fetch conversion rates for calculation.`, 'error');
+             hideLoading(loadingSpinnerRR);
+             return;
         }
         
         if (pipValueInAccount > 0) {
-            recommendedUnits = (riskAmount / (stopLossPips * pipValueInAccount)) * 100000;
+            // Corrected formula: riskAmount / (stopLossPips * pipValueInAccount) * 100000;
+            // The logic was double-counting pips, so the formula is simplified.
+            recommendedUnits = riskAmount / (stopLossPips * pipValueInAccount);
         }
     }
 
