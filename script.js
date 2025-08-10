@@ -80,6 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'readTrades' })
       });
+      if (!response.ok) throw new Error('Network response was not ok');
       const trades = await response.json();
       const tradeTableBody = document.getElementById('trade-table-body');
       tradeTableBody.innerHTML = '';
