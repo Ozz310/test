@@ -28,6 +28,10 @@ body {
   border-radius: 0;
   box-shadow: 0 4px 10px rgba(0,0,0,0.4);
   margin-bottom: 20px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1;
 }
 
 .journal-content-container {
@@ -36,6 +40,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  margin-top: 270px; /* Offset for cover photo */
 }
 
 .journal-entry-form-card,
