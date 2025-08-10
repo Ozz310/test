@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const trades = await response.json();
       const tradeTableBody = document.getElementById('trade-table-body');
       tradeTableBody.innerHTML = '';
-      if (trades.length === 0) {
+      if (!Array.isArray(trades) || trades.length === 0) {
         tradeTableBody.innerHTML = '<tr><td colspan="12">No trades yet</td></tr>';
       } else {
         trades.forEach(trade => {
