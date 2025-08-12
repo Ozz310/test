@@ -1,10 +1,11 @@
-
 document.addEventListener('DOMContentLoaded', () => {
   // Set temporary user ID
   localStorage.setItem('userId', 'test123');
   console.log('Trading Journal loaded for user: test123');
 
   const workerUrl = 'https://traders-gazette-proxy.mohammadosama310.workers.dev/';
+  const loader = document.getElementById('loader');
+  const notification = document.getElementById('notification');
 
   // Automatic sheet creation on load
   fetch(workerUrl, {
@@ -36,6 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Please fill all required fields.');
       return;
     }
+
+    // Show loader
+    loader.classList.remove('hidden');
 
     // Collect data
     const tradeData = {
@@ -74,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Error: ' + error.message);
       console.error('Save Trade Error:', error);
     } finally {
+      // Hide loader
       loader.classList.add('hidden');
     }
   });
@@ -104,9 +109,10 @@ document.addEventListener('DOMContentLoaded', () => {
             <td>${trade.exitPrice.toFixed(5)}</td>
             <td>${trade.takeProfit.toFixed(5)}</td>
             <td>${trade.stopLoss.toFixed(5)}</td>
-            <td>${trade.pnlNet.toFixed(5)}</td>
-            <td>${trade.positionSize.toFixed(5)}</td>
-            <th data-sort="notes">Notes</th>
+            <td>${trade.pnlNet.toFixed(2)}</td>
+            <td>${trade.positionSize.toFixed(2)}</td>
+            <td>${trade.strategyName || ''}</td>
+            <td>${trade.notes || ''}</td>
           `;
           tradeTableBody.appendChild(row);
         });
@@ -265,7 +271,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   syncButton.addEventListener('click', () => syncModal.classList.remove('hidden'));
   closeModal.addEventListener('click', () => syncModal.classList.add('hidden'));
-  window.addEventListener('click', (e) => if (e.target === syncModal) syncModal.classList.add('hidden'));
+  window.addEventListener('click', (e) => {
+    if (e.target === syncModal) syncModal.classList.add('hidden');
+  });
 
   syncForm.addEventListener('submit', async (e) => {
     e.preventDefault();
