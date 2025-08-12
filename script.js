@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const workerUrl = 'https://traders-gazette-proxy.mohammadosama310.workers.dev/';
   const loader = document.getElementById('loader');
   const notification = document.getElementById('notification');
+  const entryFormCard = document.getElementById('entry-form-card');
+  const syncModal = document.getElementById('sync-modal');
 
   // Automatic sheet creation on load
   fetch(workerUrl, {
@@ -15,6 +17,13 @@ document.addEventListener('DOMContentLoaded', () => {
   })
   .then(() => loadTrades())
   .catch(error => console.error('Auto sheet creation failed:', error));
+
+  // Toggle entry form
+  const addEntryButton = document.getElementById('add-entry-button');
+  addEntryButton.addEventListener('click', () => {
+    entryFormCard.classList.toggle('hidden');
+    syncModal.classList.add('hidden'); // Ensure sync modal is closed
+  });
 
   // Form submission
   const tradeForm = document.getElementById('trade-form');
@@ -70,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => notification.classList.add('hidden'), 3000);
         tradeForm.reset();
         loadTrades();
-        updateCharts(); // Update analytics
+        updateCharts();
       } else {
         alert('Error saving trade: ' + JSON.stringify(result.error));
       }
@@ -78,7 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Error: ' + error.message);
       console.error('Save Trade Error:', error);
     } finally {
-      // Hide loader
       loader.classList.add('hidden');
     }
   });
@@ -126,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Update charts
-  let timePnlChart, assetPnlChart, winLossChart, pnlDistributionChart;
+  let timePnlChart, assetPnlChart, winLossChart, pnlDistributionChart, selectedChart;
 
   async function updateCharts() {
     const trades = await loadTrades();
@@ -235,41 +243,93 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
+
+    // Single Chart Update
+    const chartSelector = document.getElementById('chart-selector');
+    if (selectedChart) selectedChart.destroy();
+    selectedChart = new Chart(document.getElementById('selectedChart'), {
+      type: 'bar', // Default type, can be adjusted per chart
+      data: {
+        labels: pnlLabels, // Default to P&L Distribution
+        datasets: [{
+          label: 'Selected Chart',
+          data: pnlCounts,
+          backgroundColor: '#d4af37',
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true },
+        }
+      }
+    });
+    chartSelector.addEventListener('change', () => {
+      const selectedId = chartSelector.value;
+      let chartData = { labels: [], datasets: [{ data: [], backgroundColor: '#d4af37' }] };
+      if (selectedId === 'timePnlChart') {
+        chartData.labels = timeLabels;
+        chartData.datasets[0].data = timeData;
+      } else if (selectedId === 'assetPnlChart') {
+        chartData.labels = assetLabels;
+        chartData.datasets[0].data = assetData;
+      } else if (selectedId === 'winLossChart') {
+        chartData.labels = ['Wins', 'Losses'];
+        chartData.datasets[0].data = [winLossData.win, winLossData.loss];
+      } else if (selectedId === 'pnlDistributionChart') {
+        chartData.labels = pnlLabels;
+        chartData.datasets[0].data = pnlCounts;
+      }
+      selectedChart.data = chartData;
+      selectedChart.update();
+    });
   }
 
   // Toggle views
-  const tableTab = document.getElementById('table-tab');
-  const analyticsTab = document.getElementById('analytics-tab');
-  const tableView = document.getElementById('table-view');
-  const analyticsView = document.getElementById('analytics-view');
+  const allChartsTab = document.getElementById('all-charts-tab');
+  const singleChartTab = document.getElementById('single-chart-tab');
+  const timePnlCard = document.getElementById('time-pnl-card');
+  const assetPnlCard = document.getElementById('asset-pnl-card');
+  const winLossCard = document.getElementById('win-loss-card');
+  const pnlDistCard = document.getElementById('pnl-dist-card');
+  const singleChartView = document.getElementById('single-chart-view');
 
-  tableTab.addEventListener('click', () => {
-    tableTab.classList.add('active');
-    analyticsTab.classList.remove('active');
-    tableView.style.display = 'block';
-    analyticsView.style.display = 'none';
+  allChartsTab.addEventListener('click', () => {
+    allChartsTab.classList.add('active');
+    singleChartTab.classList.remove('active');
+    timePnlCard.style.display = 'block';
+    assetPnlCard.style.display = 'block';
+    winLossCard.style.display = 'block';
+    pnlDistCard.style.display = 'block';
+    singleChartView.style.display = 'none';
+    updateCharts(); // Refresh all charts
   });
 
-  analyticsTab.addEventListener('click', () => {
-    analyticsTab.classList.add('active');
-    tableTab.classList.remove('active');
-    analyticsView.style.display = 'grid';
-    tableView.style.display = 'none';
-    updateCharts(); // Load charts on switch
+  singleChartTab.addEventListener('click', () => {
+    singleChartTab.classList.add('active');
+    allChartsTab.classList.remove('active');
+    timePnlCard.style.display = 'none';
+    assetPnlCard.style.display = 'none';
+    winLossCard.style.display = 'none';
+    pnlDistCard.style.display = 'none';
+    singleChartView.style.display = 'block';
+    updateCharts(); // Refresh single chart
   });
 
   // Initial load trades
   loadTrades();
-  // Initial chart load if analytics open
-  if (analyticsTab.classList.contains('active')) updateCharts();
+  // Initial chart load
+  updateCharts();
 
   // MetaAPI Sync Button and Modal
-  const syncButton = document.getElementById('sync-mt-button');
-  const syncModal = document.getElementById('sync-modal');
+  const syncMqButton = document.getElementById('sync-mq-button');
   const closeModal = document.getElementsByClassName('close')[0];
   const syncForm = document.getElementById('sync-form');
 
-  syncButton.addEventListener('click', () => syncModal.classList.remove('hidden'));
+  syncMqButton.addEventListener('click', () => {
+    entryFormCard.classList.add('hidden'); // Close entry form
+    syncModal.classList.remove('hidden');
+  });
   closeModal.addEventListener('click', () => syncModal.classList.add('hidden'));
   window.addEventListener('click', (e) => {
     if (e.target === syncModal) syncModal.classList.add('hidden');
