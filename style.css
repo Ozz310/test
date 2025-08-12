@@ -22,12 +22,16 @@ body {
 .journal-cover-photo {
   width: 100%;
   height: 250px;
-  background-image: url('https://github.com/Ozz310/tradersgazetteterminal/blob/main/images/Trading%20Journal.png?raw=true'); /* Your cover photo URL */
+  background-image: url('https://github.com/Ozz310/tradersgazetteterminal/blob/main/images/Trading%20Journal.png?raw=true');
   background-size: cover;
   background-position: center;
   border-radius: 0;
   box-shadow: 0 4px 10px rgba(0,0,0,0.4);
   margin-bottom: 20px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1;
 }
 
 .journal-content-container {
@@ -36,6 +40,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  margin-top: 270px; /* Offset for cover photo */
 }
 
 .journal-entry-form-card,
@@ -43,23 +48,24 @@ body {
   background-color: #252525;
   padding: 30px;
   border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.5);
 }
 
 .widget-title {
   color: #d4af37;
-  font-size: 2rem;
+  font-size: 2.2rem;
   margin-top: 0;
-  margin-bottom: 20px;
-  border-bottom: 2px solid #d4af37;
+  margin-bottom: 25px;
+  border-bottom: 3px solid #d4af37;
   padding-bottom: 10px;
+  font-weight: 700;
 }
 
 .form-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 20px;
-  margin-bottom: 15px;
+  gap: 25px;
+  margin-bottom: 20px;
 }
 
 .form-group {
@@ -68,75 +74,88 @@ body {
 }
 
 .form-group.full-width {
-  grid-column: span 4; /* Span full row for notes */
+  grid-column: span 4;
 }
 
 .form-group label {
-  display: block;
-  margin-bottom: 5px;
-  color: #fff;
-  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  color: #d4af37;
+  font-size: 1rem;
+  font-weight: 500;
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 10px;
-  border-radius: 5px;
-  border: 1px solid #d4af37;
+  padding: 12px 15px;
+  border-radius: 8px;
+  border: 2px solid #d4af37;
   background-color: #333;
   color: #fff;
   box-sizing: border-box;
+  font-size: 1rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #e6c84f;
+  box-shadow: 0 0 10px rgba(214, 175, 55, 0.3);
+  outline: none;
 }
 
 textarea {
-  min-height: 100px;
+  min-height: 120px;
+  resize: vertical;
 }
 
 .submit-button {
   width: auto;
-  padding: 12px 24px;
+  padding: 14px 30px;
   border: none;
-  background: #d4af37;
+  background: linear-gradient(45deg, #d4af37, #e6c84f);
   color: #1a1a1a;
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.2s ease;
-  grid-column: span 4; /* Align to full row */
+  transition: transform 0.3s ease, background 0.3s ease;
+  grid-column: span 4;
 }
 
 .submit-button:hover {
-  background: #e6c84f;
-  transform: translateY(-2px);
+  background: linear-gradient(45deg, #e6c84f, #d4af37);
+  transform: translateY(-3px);
 }
 
 .tab-switcher {
   display: flex;
   justify-content: flex-start;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 15px;
+  margin-bottom: 25px;
 }
 
 .tab {
-  padding: 10px 15px;
-  font-size: 1rem;
+  padding: 12px 20px;
+  font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid #d4af37;
-  border-radius: 8px;
+  border: 2px solid #d4af37;
+  border-radius: 10px;
   background-color: #252525;
   color: #fff;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .tab.active {
   background-color: #d4af37;
   color: #1a1a1a;
-  border-color: #d4af37;
-  box-shadow: 0 2px 10px rgba(240, 215, 136, 0.4);
+  border-color: #e6c84f;
+  box-shadow: 0 4px 15px rgba(240, 215, 136, 0.5);
 }
 
 .journal-table-container {
@@ -151,48 +170,107 @@ textarea {
 #journalTable thead th {
   background-color: #333;
   color: #d4af37;
-  padding: 12px;
+  padding: 15px;
   text-align: left;
-  font-size: 0.9rem;
+  font-size: 1rem;
   white-space: nowrap;
-  cursor: pointer; /* For sorting */
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#journalTable thead th:hover {
+  background-color: #444;
 }
 
 #journalTable tbody td {
-  border-top: 1px solid #d4af37;
-  padding: 12px;
+  border-top: 2px solid #d4af37;
+  padding: 15px;
   color: #fff;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   white-space: nowrap;
+  transition: background-color 0.3s ease;
 }
 
 tbody tr:hover {
-  background: #333;
+  background: #444;
 }
 
 .analytics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 20px;
+  gap: 25px;
 }
 
 .chart-card {
   background-color: #333;
-  padding: 20px;
+  padding: 25px;
   border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.5);
 }
 
 .chart-card h4 {
   color: #d4af37;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   text-align: center;
   margin-top: 0;
   margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.loader {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  border: 8px solid #d4af37;
+  border-top: 8px solid #1a1a1a;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  z-index: 1000;
+}
+
+.notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #252525;
+  color: #d4af37;
+  padding: 15px 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  font-size: 1.1rem;
+  font-weight: 600;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeInOut 3s ease forwards;
+}
+
+.hidden {
+  display: none;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 @media (max-width: 900px) {
   .form-row {
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+  .submit-button {
+    grid-column: span 2;
   }
 }
