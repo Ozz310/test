@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const workerUrl = 'https://traders-gazette-proxy.mohammadosama310.workers.dev/';
   const loader = document.getElementById('loader');
   const notification = document.getElementById('notification');
+  const entryFormCard = document.getElementById('entry-form-card');
   const syncModal = document.getElementById('sync-modal');
 
   // Automatic sheet creation on load
@@ -17,71 +18,84 @@ document.addEventListener('DOMContentLoaded', () => {
     .then(() => loadTrades())
     .catch(error => console.error('Auto sheet creation failed:', error));
 
+  // Toggle entry form
+  const addEntryButton = document.getElementById('add-entry-button');
+  if (addEntryButton) {
+    addEntryButton.addEventListener('click', () => {
+      entryFormCard.classList.toggle('hidden');
+      syncModal.classList.add('hidden'); // Ensure sync modal is closed
+    });
+  }
+
   // Form submission
   const tradeForm = document.getElementById('trade-form');
-  tradeForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  if (tradeForm) {
+    tradeForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
 
-    // Validation
-    const requiredFields = ['date', 'symbol', 'assetType', 'buySell', 'entryPrice'];
-    let valid = true;
-    requiredFields.forEach(id => {
-      const input = document.getElementById(id);
-      if (!input.value.trim()) {
-        input.style.borderColor = 'red';
-        valid = false;
-      } else {
-        input.style.borderColor = '#d4af37';
+      // Validation
+      const requiredFields = ['date', 'symbol', 'assetType', 'buySell', 'entryPrice'];
+      let valid = true;
+      requiredFields.forEach(id => {
+        const input = document.getElementById(id);
+        if (input && !input.value.trim()) {
+          input.style.borderColor = 'red';
+          valid = false;
+        } else if (input) {
+          input.style.borderColor = '#d4af37';
+        }
+      });
+      if (!valid) {
+        alert('Please fill all required fields.');
+        return;
+      }
+
+      // Show loader
+      if (loader) loader.classList.remove('hidden');
+
+      // Collect data
+      const tradeData = {
+        date: document.getElementById('date').value,
+        symbol: document.getElementById('symbol').value,
+        assetType: document.getElementById('assetType').value,
+        buySell: document.getElementById('buySell').value,
+        entryPrice: parseFloat(document.getElementById('entryPrice').value),
+        exitPrice: parseFloat(document.getElementById('exitPrice').value) || 0,
+        takeProfit: parseFloat(document.getElementById('takeProfit').value) || 0,
+        stopLoss: parseFloat(document.getElementById('stopLoss').value) || 0,
+        pnlNet: parseFloat(document.getElementById('pnlNet').value) || 0,
+        positionSize: parseFloat(document.getElementById('positionSize').value) || 0,
+        strategyName: document.getElementById('strategyName').value,
+        notes: document.getElementById('notes').value
+      };
+
+      try {
+        const response = await fetch(workerUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'writeTrade', tradeData })
+        });
+        const result = await response.json();
+        if (result.status === 'Trade saved') {
+          if (notification) {
+            notification.textContent = 'Trade Saved Successfully';
+            notification.classList.remove('hidden');
+            setTimeout(() => notification.classList.add('hidden'), 3000);
+          }
+          if (tradeForm) tradeForm.reset();
+          loadTrades();
+          updateCharts();
+        } else {
+          alert('Error saving trade: ' + JSON.stringify(result.error));
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+        console.error('Save Trade Error:', error);
+      } finally {
+        if (loader) loader.classList.add('hidden');
       }
     });
-    if (!valid) {
-      alert('Please fill all required fields.');
-      return;
-    }
-
-    // Show loader
-    loader.classList.remove('hidden');
-
-    // Collect data
-    const tradeData = {
-      date: document.getElementById('date').value,
-      symbol: document.getElementById('symbol').value,
-      assetType: document.getElementById('assetType').value,
-      buySell: document.getElementById('buySell').value,
-      entryPrice: parseFloat(document.getElementById('entryPrice').value),
-      exitPrice: parseFloat(document.getElementById('exitPrice').value) || 0,
-      takeProfit: parseFloat(document.getElementById('takeProfit').value) || 0,
-      stopLoss: parseFloat(document.getElementById('stopLoss').value) || 0,
-      pnlNet: parseFloat(document.getElementById('pnlNet').value) || 0,
-      positionSize: parseFloat(document.getElementById('positionSize').value) || 0,
-      strategyName: document.getElementById('strategyName').value,
-      notes: document.getElementById('notes').value
-    };
-
-    try {
-      const response = await fetch(workerUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'writeTrade', tradeData })
-      });
-      const result = await response.json();
-      if (result.status === 'Trade saved') {
-        notification.textContent = 'Trade Saved Successfully';
-        notification.classList.remove('hidden');
-        setTimeout(() => notification.classList.add('hidden'), 3000);
-        tradeForm.reset();
-        loadTrades();
-        updateCharts();
-      } else {
-        alert('Error saving trade: ' + JSON.stringify(result.error));
-      }
-    } catch (error) {
-      alert('Error: ' + error.message);
-      console.error('Save Trade Error:', error);
-    } finally {
-      loader.classList.add('hidden');
-    }
-  });
+  }
 
   // Load trades from sheets
   async function loadTrades() {
@@ -94,33 +108,38 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!response.ok) throw new Error('Network response was not ok');
       const trades = await response.json();
       const tradeTableBody = document.getElementById('trade-table-body');
-      tradeTableBody.innerHTML = '';
-      if (!Array.isArray(trades) || trades.length === 0) {
-        tradeTableBody.innerHTML = '<tr><td colspan="12">No trades yet</td></tr>';
-      } else {
-        trades.forEach(trade => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${trade.date || ''}</td>
-            <td>${trade.symbol || ''}</td>
-            <td>${trade.assetType || ''}</td>
-            <td>${trade.buySell || ''}</td>
-            <td>${trade.entryPrice.toFixed(5)}</td>
-            <td>${trade.exitPrice.toFixed(5)}</td>
-            <td>${trade.takeProfit.toFixed(5)}</td>
-            <td>${trade.stopLoss.toFixed(5)}</td>
-            <td>${trade.pnlNet.toFixed(2)}</td>
-            <td>${trade.positionSize.toFixed(2)}</td>
-            <td>${trade.strategyName || ''}</td>
-            <td>${trade.notes || ''}</td>
-          `;
-          tradeTableBody.appendChild(row);
-        });
+      if (tradeTableBody) {
+        tradeTableBody.innerHTML = '';
+        if (!Array.isArray(trades) || trades.length === 0) {
+          tradeTableBody.innerHTML = '<tr><td colspan="12">No trades yet</td></tr>';
+        } else {
+          trades.forEach(trade => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${trade.date || ''}</td>
+              <td>${trade.symbol || ''}</td>
+              <td>${trade.assetType || ''}</td>
+              <td>${trade.buySell || ''}</td>
+              <td>${trade.entryPrice.toFixed(5)}</td>
+              <td>${trade.exitPrice.toFixed(5)}</td>
+              <td>${trade.takeProfit.toFixed(5)}</td>
+              <td>${trade.stopLoss.toFixed(5)}</td>
+              <td>${trade.pnlNet.toFixed(2)}</td>
+              <td>${trade.positionSize.toFixed(2)}</td>
+              <td>${trade.strategyName || ''}</td>
+              <td>${trade.notes || ''}</td>
+            `;
+            tradeTableBody.appendChild(row);
+          });
+        }
       }
       return trades;
     } catch (error) {
       console.error('Load Trades Error:', error);
-      document.getElementById('trade-table-body').innerHTML = '<tr><td colspan="12">Error loading trades</td></tr>';
+      const tradeTableBody = document.getElementById('trade-table-body');
+      if (tradeTableBody) {
+        tradeTableBody.innerHTML = '<tr><td colspan="12">Error loading trades</td></tr>';
+      }
       return [];
     }
   }
@@ -195,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
           data: assetData,
           backgroundColor: (context) => {
             const value = context.raw;
-            return value >= 0 ? 'rgba(212, 175, 55, 0.8)' : 'rgba(255, 99, 132, 0.8)';
+            return value >= 0 ? 'rgba(50, 205, 50, 0.8)' : 'rgba(255, 99, 132, 0.8)';
           },
           borderColor: '#fff',
           borderWidth: 1
@@ -265,7 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
           data: pnlCounts,
           backgroundColor: (context) => {
             const index = context.dataIndex;
-            return index < pnlLabels.length / 2 ? 'rgba(255, 99, 132, 0.8)' : 'rgba(212, 175, 55, 0.8)';
+            return index < pnlLabels.length / 2 ? 'rgba(255, 99, 132, 0.8)' : 'rgba(50, 205, 50, 0.8)';
           },
           borderColor: '#fff',
           borderWidth: 1
@@ -293,70 +312,76 @@ document.addEventListener('DOMContentLoaded', () => {
   const tableView = document.getElementById('table-view');
   const analyticsView = document.getElementById('analytics-view');
 
-  tableTab.addEventListener('click', () => {
-    tableTab.classList.add('active');
-    analyticsTab.classList.remove('active');
-    tableView.style.display = 'block';
-    analyticsView.style.display = 'none';
-  });
+  if (tableTab && analyticsTab && tableView && analyticsView) {
+    tableTab.addEventListener('click', () => {
+      tableTab.classList.add('active');
+      analyticsTab.classList.remove('active');
+      tableView.style.display = 'block';
+      analyticsView.style.display = 'none';
+    });
 
-  analyticsTab.addEventListener('click', () => {
-    analyticsTab.classList.add('active');
-    tableTab.classList.remove('active');
-    analyticsView.style.display = 'grid';
-    tableView.style.display = 'none';
-    updateCharts();
-  });
+    analyticsTab.addEventListener('click', () => {
+      analyticsTab.classList.add('active');
+      tableTab.classList.remove('active');
+      analyticsView.style.display = 'block';
+      tableView.style.display = 'none';
+      updateCharts();
+    });
+  }
 
   // Initial load
   loadTrades();
-  if (analyticsTab.classList.contains('active')) updateCharts();
+  if (analyticsTab && analyticsTab.classList.contains('active')) updateCharts();
 
   // Sync Modal
   const syncButton = document.getElementById('sync-mt-button');
   const closeModal = document.getElementsByClassName('close')[0];
   const syncForm = document.getElementById('sync-form');
 
-  syncButton.addEventListener('click', () => syncModal.classList.remove('hidden'));
-  closeModal.addEventListener('click', () => syncModal.classList.add('hidden'));
-  window.addEventListener('click', (e) => {
-    if (e.target === syncModal) syncModal.classList.add('hidden');
-  });
+  if (syncButton && closeModal && syncForm) {
+    syncButton.addEventListener('click', () => syncModal.classList.remove('hidden'));
+    closeModal.addEventListener('click', () => syncModal.classList.add('hidden'));
+    window.addEventListener('click', (e) => {
+      if (e.target === syncModal) syncModal.classList.add('hidden');
+    });
 
-  syncForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const credentials = {
-      platform: document.getElementById('platform').value,
-      server: document.getElementById('server').value,
-      accountNumber: document.getElementById('accountNumber').value,
-      password: document.getElementById('password').value,
-      nickname: document.getElementById('nickname').value,
-    };
-    localStorage.setItem('mtCredentials', btoa(JSON.stringify(credentials)));
+    syncForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const credentials = {
+        platform: document.getElementById('platform').value,
+        server: document.getElementById('server').value,
+        accountNumber: document.getElementById('accountNumber').value,
+        password: document.getElementById('password').value,
+        nickname: document.getElementById('nickname').value,
+      };
+      localStorage.setItem('mtCredentials', btoa(JSON.stringify(credentials)));
 
-    loader.classList.remove('hidden');
-    try {
-      const response = await fetch(workerUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'syncMetaAPI', credentials })
-      });
-      const result = await response.json();
-      if (result.status === 'Sync complete') {
-        notification.textContent = 'Trades Synced Successfully';
-        notification.classList.remove('hidden');
-        setTimeout(() => notification.classList.add('hidden'), 3000);
-        syncModal.classList.add('hidden');
-        loadTrades();
-        updateCharts();
-      } else {
-        alert('Error syncing trades: ' + JSON.stringify(result.error));
+      if (loader) loader.classList.remove('hidden');
+      try {
+        const response = await fetch(workerUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'syncMetaAPI', credentials })
+        });
+        const result = await response.json();
+        if (result.status === 'Sync complete') {
+          if (notification) {
+            notification.textContent = 'Trades Synced Successfully';
+            notification.classList.remove('hidden');
+            setTimeout(() => notification.classList.add('hidden'), 3000);
+          }
+          syncModal.classList.add('hidden');
+          loadTrades();
+          updateCharts();
+        } else {
+          alert('Error syncing trades: ' + JSON.stringify(result.error));
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+        console.error('Sync Error:', error);
+      } finally {
+        if (loader) loader.classList.add('hidden');
       }
-    } catch (error) {
-      alert('Error: ' + error.message);
-      console.error('Sync Error:', error);
-    } finally {
-      loader.classList.add('hidden');
-    }
-  });
+    });
+  }
 });
