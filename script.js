@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const workerUrl = 'https://traders-gazette-proxy.mohammadosama310.workers.dev/';
   const loader = document.getElementById('loader');
   const notification = document.getElementById('notification');
-  const entryFormCard = document.getElementById('entry-form-card');
   const syncModal = document.getElementById('sync-modal');
 
   // Automatic sheet creation on load
@@ -15,15 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'createSheet' }),
   })
-  .then(() => loadTrades())
-  .catch(error => console.error('Auto sheet creation failed:', error));
-
-  // Toggle entry form
-  const addEntryButton = document.getElementById('add-entry-button');
-  addEntryButton.addEventListener('click', () => {
-    entryFormCard.classList.toggle('hidden');
-    syncModal.classList.add('hidden'); // Ensure sync modal is closed
-  });
+    .then(() => loadTrades())
+    .catch(error => console.error('Auto sheet creation failed:', error));
 
   // Form submission
   const tradeForm = document.getElementById('trade-form');
@@ -125,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
           tradeTableBody.appendChild(row);
         });
       }
-      return trades; // Return for charts
+      return trades;
     } catch (error) {
       console.error('Load Trades Error:', error);
       document.getElementById('trade-table-body').innerHTML = '<tr><td colspan="12">Error loading trades</td></tr>';
@@ -133,8 +125,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Update charts
-  let timePnlChart, assetPnlChart, winLossChart, pnlDistributionChart, selectedChart;
+  // Update charts with modern visuals
+  let timePnlChart, assetPnlChart, winLossChart, pnlDistributionChart;
 
   async function updateCharts() {
     const trades = await loadTrades();
@@ -157,15 +149,32 @@ document.addEventListener('DOMContentLoaded', () => {
           label: 'P&L Over Time',
           data: timeData,
           borderColor: '#d4af37',
-          backgroundColor: 'rgba(212, 175, 55, 0.2)',
+          backgroundColor: (context) => {
+            const ctx = context.chart.ctx;
+            const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+            gradient.addColorStop(0, 'rgba(212, 175, 55, 0.4)');
+            gradient.addColorStop(1, 'rgba(212, 175, 55, 0)');
+            return gradient;
+          },
           borderWidth: 2,
+          pointBackgroundColor: '#d4af37',
+          pointBorderColor: '#fff',
+          pointHoverBackgroundColor: '#fff',
+          pointHoverBorderColor: '#d4af37'
         }]
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         scales: {
-          y: { beginAtZero: true },
-        }
+          x: { title: { display: true, text: 'Date', color: '#d4af37' } },
+          y: { beginAtZero: true, title: { display: true, text: 'P&L', color: '#d4af37' }, ticks: { color: '#fff' } }
+        },
+        plugins: {
+          legend: { labels: { color: '#d4af37' } },
+          tooltip: { backgroundColor: '#252525', titleColor: '#d4af37', bodyColor: '#fff' }
+        },
+        animation: { duration: 1000, easing: 'easeInOutQuad' }
       }
     });
 
@@ -184,14 +193,26 @@ document.addEventListener('DOMContentLoaded', () => {
         datasets: [{
           label: 'P&L by Asset Type',
           data: assetData,
-          backgroundColor: '#d4af37',
+          backgroundColor: (context) => {
+            const value = context.raw;
+            return value >= 0 ? 'rgba(212, 175, 55, 0.8)' : 'rgba(255, 99, 132, 0.8)';
+          },
+          borderColor: '#fff',
+          borderWidth: 1
         }]
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         scales: {
-          y: { beginAtZero: true },
-        }
+          x: { title: { display: true, text: 'Asset Type', color: '#d4af37' } },
+          y: { beginAtZero: true, title: { display: true, text: 'P&L', color: '#d4af37' }, ticks: { color: '#fff' } }
+        },
+        plugins: {
+          legend: { labels: { color: '#d4af37' } },
+          tooltip: { backgroundColor: '#252525', titleColor: '#d4af37', bodyColor: '#fff' }
+        },
+        animation: { duration: 1000, easing: 'easeInOutQuad' }
       }
     });
 
@@ -199,29 +220,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const winLossData = trades.reduce((acc, trade) => {
       if (trade.pnlNet > 0) acc.win++;
       else if (trade.pnlNet < 0) acc.loss++;
+      else acc.breakEven++;
       return acc;
-    }, { win: 0, loss: 0 });
+    }, { win: 0, loss: 0, breakEven: 0 });
     if (winLossChart) winLossChart.destroy();
     winLossChart = new Chart(document.getElementById('winLossChart'), {
       type: 'pie',
       data: {
-        labels: ['Wins', 'Losses'],
+        labels: ['Wins', 'Losses', 'Break-Even'],
         datasets: [{
-          data: [winLossData.win, winLossData.loss],
-          backgroundColor: ['#d4af37', '#1a1a1a'],
+          data: [winLossData.win, winLossData.loss, winLossData.breakEven],
+          backgroundColor: ['#32CD32', '#FF4040', '#d4af37'],
+          borderColor: '#fff',
+          borderWidth: 1
         }]
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { color: '#d4af37' } },
+          tooltip: { backgroundColor: '#252525', titleColor: '#d4af37', bodyColor: '#fff' }
+        },
+        animation: { duration: 1000, easing: 'easeInOutQuad' }
       }
     });
 
-    // P&L Distribution (Histogram - Bar Chart)
+    // P&L Distribution (Bar Chart)
     const pnlData = trades.map(trade => trade.pnlNet);
     const pnlBins = [-1000, -500, -100, 0, 100, 500, 1000, Infinity];
     const pnlDistribution = pnlBins.slice(0, -1).map((bin, i) => ({
-      label: `${bin} to ${pnlBins[i+1]}`,
-      count: pnlData.filter(pnl => pnl >= bin && pnl < pnlBins[i+1]).length,
+      label: `${bin} to ${pnlBins[i + 1] === Infinity ? '∞' : pnlBins[i + 1]}`,
+      count: pnlData.filter(pnl => pnl >= bin && pnl < pnlBins[i + 1]).length
     }));
     const pnlLabels = pnlDistribution.map(bin => bin.label);
     const pnlCounts = pnlDistribution.map(bin => bin.count);
@@ -233,103 +263,61 @@ document.addEventListener('DOMContentLoaded', () => {
         datasets: [{
           label: 'P&L Distribution',
           data: pnlCounts,
-          backgroundColor: '#d4af37',
+          backgroundColor: (context) => {
+            const index = context.dataIndex;
+            return index < pnlLabels.length / 2 ? 'rgba(255, 99, 132, 0.8)' : 'rgba(212, 175, 55, 0.8)';
+          },
+          borderColor: '#fff',
+          borderWidth: 1
         }]
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         scales: {
-          y: { beginAtZero: true },
-        }
+          x: { title: { display: true, text: 'P&L Range', color: '#d4af37' } },
+          y: { beginAtZero: true, title: { display: true, text: 'Count', color: '#d4af37' }, ticks: { color: '#fff' } }
+        },
+        plugins: {
+          legend: { labels: { color: '#d4af37' } },
+          tooltip: { backgroundColor: '#252525', titleColor: '#d4af37', bodyColor: '#fff' }
+        },
+        animation: { duration: 1000, easing: 'easeInOutQuad' }
       }
-    });
-
-    // Single Chart Update
-    const chartSelector = document.getElementById('chart-selector');
-    if (selectedChart) selectedChart.destroy();
-    selectedChart = new Chart(document.getElementById('selectedChart'), {
-      type: 'bar', // Default type, can be adjusted per chart
-      data: {
-        labels: pnlLabels, // Default to P&L Distribution
-        datasets: [{
-          label: 'Selected Chart',
-          data: pnlCounts,
-          backgroundColor: '#d4af37',
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: { beginAtZero: true },
-        }
-      }
-    });
-    chartSelector.addEventListener('change', () => {
-      const selectedId = chartSelector.value;
-      let chartData = { labels: [], datasets: [{ data: [], backgroundColor: '#d4af37' }] };
-      if (selectedId === 'timePnlChart') {
-        chartData.labels = timeLabels;
-        chartData.datasets[0].data = timeData;
-      } else if (selectedId === 'assetPnlChart') {
-        chartData.labels = assetLabels;
-        chartData.datasets[0].data = assetData;
-      } else if (selectedId === 'winLossChart') {
-        chartData.labels = ['Wins', 'Losses'];
-        chartData.datasets[0].data = [winLossData.win, winLossData.loss];
-      } else if (selectedId === 'pnlDistributionChart') {
-        chartData.labels = pnlLabels;
-        chartData.datasets[0].data = pnlCounts;
-      }
-      selectedChart.data = chartData;
-      selectedChart.update();
     });
   }
 
   // Toggle views
-  const allChartsTab = document.getElementById('all-charts-tab');
-  const singleChartTab = document.getElementById('single-chart-tab');
-  const timePnlCard = document.getElementById('time-pnl-card');
-  const assetPnlCard = document.getElementById('asset-pnl-card');
-  const winLossCard = document.getElementById('win-loss-card');
-  const pnlDistCard = document.getElementById('pnl-dist-card');
-  const singleChartView = document.getElementById('single-chart-view');
+  const tableTab = document.getElementById('table-tab');
+  const analyticsTab = document.getElementById('analytics-tab');
+  const tableView = document.getElementById('table-view');
+  const analyticsView = document.getElementById('analytics-view');
 
-  allChartsTab.addEventListener('click', () => {
-    allChartsTab.classList.add('active');
-    singleChartTab.classList.remove('active');
-    timePnlCard.style.display = 'block';
-    assetPnlCard.style.display = 'block';
-    winLossCard.style.display = 'block';
-    pnlDistCard.style.display = 'block';
-    singleChartView.style.display = 'none';
-    updateCharts(); // Refresh all charts
+  tableTab.addEventListener('click', () => {
+    tableTab.classList.add('active');
+    analyticsTab.classList.remove('active');
+    tableView.style.display = 'block';
+    analyticsView.style.display = 'none';
   });
 
-  singleChartTab.addEventListener('click', () => {
-    singleChartTab.classList.add('active');
-    allChartsTab.classList.remove('active');
-    timePnlCard.style.display = 'none';
-    assetPnlCard.style.display = 'none';
-    winLossCard.style.display = 'none';
-    pnlDistCard.style.display = 'none';
-    singleChartView.style.display = 'block';
-    updateCharts(); // Refresh single chart
+  analyticsTab.addEventListener('click', () => {
+    analyticsTab.classList.add('active');
+    tableTab.classList.remove('active');
+    analyticsView.style.display = 'grid';
+    tableView.style.display = 'none';
+    updateCharts();
   });
 
-  // Initial load trades
+  // Initial load
   loadTrades();
-  // Initial chart load
-  updateCharts();
+  if (analyticsTab.classList.contains('active')) updateCharts();
 
-  // MetaAPI Sync Button and Modal
-  const syncMqButton = document.getElementById('sync-mq-button');
+  // Sync Modal
+  const syncButton = document.getElementById('sync-mt-button');
   const closeModal = document.getElementsByClassName('close')[0];
   const syncForm = document.getElementById('sync-form');
 
-  syncMqButton.addEventListener('click', () => {
-    entryFormCard.classList.add('hidden'); // Close entry form
-    syncModal.classList.remove('hidden');
-  });
+  syncButton.addEventListener('click', () => syncModal.classList.remove('hidden'));
   closeModal.addEventListener('click', () => syncModal.classList.add('hidden'));
   window.addEventListener('click', (e) => {
     if (e.target === syncModal) syncModal.classList.add('hidden');
@@ -344,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
       password: document.getElementById('password').value,
       nickname: document.getElementById('nickname').value,
     };
-    localStorage.setItem('mtCredentials', btoa(JSON.stringify(credentials))); // Simple encryption
+    localStorage.setItem('mtCredentials', btoa(JSON.stringify(credentials)));
 
     loader.classList.remove('hidden');
     try {
