@@ -10,7 +10,11 @@
 <body class="trading-journal">
   <div class="journal-cover-photo"></div>
   <div class="journal-content-container">
-    <div class="journal-entry-form-card">
+    <div class="action-buttons">
+      <button id="add-entry-button" class="submit-button">Add New Entry</button>
+      <button id="sync-mq-button" class="submit-button">Sync with MQ</button>
+    </div>
+    <div class="journal-entry-form-card hidden" id="entry-form-card">
       <h2 class="widget-title">Add a New Trade</h2>
       <form id="trade-form">
         <div class="form-row">
@@ -83,11 +87,39 @@
       <div id="notification" class="notification hidden"></div>
     </div>
     <div class="tab-switcher">
-      <button class="tab active" id="table-tab">Table View</button>
-      <button class="tab" id="analytics-tab">Analytics View</button>
+      <button class="tab active" id="all-charts-tab">All Charts</button>
+      <button class="tab" id="single-chart-tab">Single Chart</button>
+    </div>
+    <div class="journal-data-card analytics-grid" id="analytics-view">
+      <h3 class="widget-title">Analytics View</h3>
+      <div class="chart-card" id="time-pnl-card">
+        <h4>Time-Based P&L</h4>
+        <canvas id="timePnlChart"></canvas>
+      </div>
+      <div class="chart-card" id="asset-pnl-card">
+        <h4>Asset-Based P&L</h4>
+        <canvas id="assetPnlChart"></canvas>
+      </div>
+      <div class="chart-card" id="win-loss-card">
+        <h4>Win vs Loss Count</h4>
+        <canvas id="winLossChart"></canvas>
+      </div>
+      <div class="chart-card" id="pnl-dist-card">
+        <h4>P&L Distribution</h4>
+        <canvas id="pnlDistributionChart"></canvas>
+      </div>
+      <div class="chart-card single-chart" id="single-chart-view" style="display: none;">
+        <select id="chart-selector">
+          <option value="timePnlChart">Time-Based P&L</option>
+          <option value="assetPnlChart">Asset-Based P&L</option>
+          <option value="winLossChart">Win vs Loss Count</option>
+          <option value="pnlDistributionChart">P&L Distribution</option>
+        </select>
+        <canvas id="selectedChart"></canvas>
+      </div>
     </div>
     <div class="journal-data-card" id="table-view">
-      <h3 class="widget-title">My Journal Entries</h3>
+      <h3 class="widget-title">Trade Journal Log</h3>
       <div class="journal-table-container">
         <table id="journalTable">
           <thead>
@@ -110,26 +142,6 @@
         </table>
       </div>
     </div>
-    <div class="journal-data-card analytics-grid" id="analytics-view" style="display: none;">
-      <h3 class="widget-title">Analytics View</h3>
-      <div class="chart-card">
-        <h4>Time-Based P&L</h4>
-        <canvas id="timePnlChart"></canvas>
-      </div>
-      <div class="chart-card">
-        <h4>Asset-Based P&L</h4>
-        <canvas id="assetPnlChart"></canvas>
-      </div>
-      <div class="chart-card">
-        <h4>Win vs Loss Count</h4>
-        <canvas id="winLossChart"></canvas>
-      </div>
-      <div class="chart-card">
-        <h4>P&L Distribution</h4>
-        <canvas id="pnlDistributionChart"></canvas>
-      </div>
-    </div>
-    <button id="sync-mt-button" class="submit-button" style="margin-top: 20px;">Sync MT4/5 Trades</button>
     <div id="sync-modal" class="modal hidden">
       <div class="modal-content">
         <span class="close">&times;</span>
