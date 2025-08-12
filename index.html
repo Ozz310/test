@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,15 +14,15 @@
       <form id="trade-form">
         <div class="form-row">
           <div class="form-group">
-            <label for="date">Date:</label>
+            <label for="date">📅 Date:</label>
             <input type="date" id="date" required>
           </div>
           <div class="form-group">
-            <label for="symbol">Symbol:</label>
+            <label for="symbol">💱 Symbol:</label>
             <input type="text" id="symbol" required>
           </div>
           <div class="form-group">
-            <label for="assetType">Asset Type:</label>
+            <label for="assetType">📊 Asset Type:</label>
             <select id="assetType" required>
               <option value="Forex">Forex</option>
               <option value="Crypto">Crypto</option>
@@ -34,51 +33,53 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label for="buySell">Buy/Sell:</label>
+            <label for="buySell">⬆️/⬇️ Buy/Sell:</label>
             <select id="buySell" required>
               <option value="Buy">Buy</option>
               <option value="Sell">Sell</option>
             </select>
           </div>
           <div class="form-group">
-            <label for="entryPrice">Entry Price:</label>
+            <label for="entryPrice">📈 Entry Price:</label>
             <input type="number" id="entryPrice" step="0.00001" required>
           </div>
           <div class="form-group">
-            <label for="exitPrice">Exit Price:</label>
+            <label for="exitPrice">📉 Exit Price:</label>
             <input type="number" id="exitPrice" step="0.00001">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label for="takeProfit">Take Profit:</label>
+            <label for="takeProfit">🎯 Take Profit:</label>
             <input type="number" id="takeProfit" step="0.00001">
           </div>
           <div class="form-group">
-            <label for="stopLoss">Stop Loss:</label>
+            <label for="stopLoss">🛑 Stop Loss:</label>
             <input type="number" id="stopLoss" step="0.00001">
           </div>
           <div class="form-group">
-            <label for="pnlNet">P&L Net:</label>
+            <label for="pnlNet">💰 P&L Net:</label>
             <input type="number" id="pnlNet" step="0.00001">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label for="positionSize">Position Size:</label>
+            <label for="positionSize">📏 Position Size:</label>
             <input type="number" id="positionSize" step="0.00001">
           </div>
           <div class="form-group">
-            <label for="strategyName">Strategy Name:</label>
+            <label for="strategyName">📋 Strategy Name:</label>
             <input type="text" id="strategyName">
           </div>
         </div>
         <div class="form-group full-width">
-          <label for="notes">Notes:</label>
+          <label for="notes">✍️ Notes:</label>
           <textarea id="notes"></textarea>
         </div>
         <button type="submit" class="submit-button">Add Entry</button>
       </form>
+      <div id="loader" class="loader hidden"></div>
+      <div id="notification" class="notification hidden"></div>
     </div>
     <div class="tab-switcher">
       <button class="tab active" id="table-tab">Table View</button>
