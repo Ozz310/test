@@ -1,3 +1,4 @@
+
 document.addEventListener('DOMContentLoaded', () => {
   // Set temporary user ID
   localStorage.setItem('userId', 'test123');
