@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('Trading Journal loaded for user: test123');
 
   const workerUrl = 'https://traders-gazette-proxy.mohammadosama310.workers.dev/';
+  const loader = document.getElementById('loader');
+  const notification = document.getElementById('notification');
 
   // Automatic sheet creation on load
   fetch(workerUrl, {
@@ -36,6 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // Show loader
+    loader.classList.remove('hidden');
+
     // Collect data
     const tradeData = {
       date: document.getElementById('date').value,
@@ -60,7 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const result = await response.json();
       if (result.status === 'Trade saved') {
-        alert('Trade saved successfully!');
+        notification.textContent = 'Trade Saved Successfully';
+        notification.classList.remove('hidden');
+        setTimeout(() => notification.classList.add('hidden'), 3000);
         tradeForm.reset();
         loadTrades();
       } else {
@@ -69,6 +76,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       alert('Error: ' + error.message);
       console.error('Save Trade Error:', error);
+    } finally {
+      // Hide loader
+      loader.classList.add('hidden');
     }
   });
 
@@ -98,8 +108,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <td>${trade.exitPrice.toFixed(5)}</td>
             <td>${trade.takeProfit.toFixed(5)}</td>
             <td>${trade.stopLoss.toFixed(5)}</td>
-            <td>${trade.pnlNet.toFixed(5)}</td>
-            <td>${trade.positionSize.toFixed(5)}</td>
+            <td>${trade.pnlNet.toFixed(2)}</td>
+            <td>${trade.positionSize.toFixed(2)}</td>
             <td>${trade.strategyName || ''}</td>
             <td>${trade.notes || ''}</td>
           `;
