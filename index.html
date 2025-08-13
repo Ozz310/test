@@ -10,8 +10,8 @@
   <script>
     (function() {
       const script = document.createElement('script');
-      // Using a more reliable, general CDN for MetaAPI SDK
-      script.src = 'https://unpkg.com/metaapi.cloud-sdk';
+      // Using a reliable CDN for the MetaAPI SDK
+      script.src = 'https://unpkg.com/metaapi.cloud-sdk@1.0.0/dist/index.js';
       script.onload = () => console.log('MetaAPI SDK loaded successfully');
       script.onerror = (e) => {
         console.error('Failed to load MetaAPI SDK:', e);
