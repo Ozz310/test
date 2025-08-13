@@ -9,6 +9,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const entryFormCard = document.getElementById('entry-form-card');
   const syncModal = document.getElementById('sync-modal');
   const timeFrameSelect = document.getElementById('time-frame');
+  const exportTableCsv = document.getElementById('export-table-csv');
+  const exportAnalyticsCsv = document.getElementById('export-analytics-csv');
+
+  // MetaAPI Setup (Replace with your token and account details)
+  const metaApi = new MetaApi({
+    token: 'demo_12345', // Replace with your MetaAPI token
+    domain: 'app.metaapi.cloud'
+  });
+  let account;
 
   // Automatic sheet creation on load
   fetch(workerUrl, {
@@ -24,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (addEntryButton) {
     addEntryButton.addEventListener('click', () => {
       entryFormCard.classList.toggle('hidden');
-      syncModal.classList.add('hidden'); // Ensure sync modal is closed
+      syncModal.classList.add('hidden');
     });
   }
 
@@ -210,4 +219,71 @@ document.addEventListener('DOMContentLoaded', () => {
           legend: { labels: { color: '#d4af37' } },
           tooltip: { backgroundColor: '#252525', titleColor: '#d4af37', bodyColor: '#fff' }
         },
-        animation: { duration: 1000, easing: 'ease
+        animation: { duration: 1000, easing: 'easeInOutQuad' }
+      }
+    });
+
+    // Asset-Based P&L (Bar Chart)
+    const assetPnlData = filteredTrades.reduce((acc, trade) => {
+      acc[trade.assetType] = (acc[trade.assetType] || 0) + trade.pnlNet;
+      return acc;
+    }, {});
+    const assetLabels = Object.keys(assetPnlData);
+    const assetData = assetLabels.map(asset => assetPnlData[asset]);
+    if (assetPnlChart) assetPnlChart.destroy();
+    assetPnlChart = new Chart(document.getElementById('assetPnlChart'), {
+      type: 'bar',
+      data: {
+        labels: assetLabels,
+        datasets: [{
+          label: 'P&L by Asset Type',
+          data: assetData,
+          backgroundColor: (context) => {
+            const value = context.raw;
+            return value >= 0 ? 'rgba(50, 205, 50, 0.8)' : 'rgba(255, 99, 132, 0.8)';
+          },
+          borderColor: '#fff',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { title: { display: true, text: 'Asset Type', color: '#d4af37' } },
+          y: { beginAtZero: true, title: { display: true, text: 'P&L', color: '#d4af37' }, ticks: { color: '#fff' } }
+        },
+        plugins: {
+          legend: { labels: { color: '#d4af37' } },
+          tooltip: { backgroundColor: '#252525', titleColor: '#d4af37', bodyColor: '#fff' }
+        },
+        animation: { duration: 1000, easing: 'easeInOutQuad' }
+      }
+    });
+
+    // Win vs Loss Count (Pie Chart)
+    const winLossData = filteredTrades.reduce((acc, trade) => {
+      if (trade.pnlNet > 0) acc.win++;
+      else if (trade.pnlNet < 0) acc.loss++;
+      else acc.breakEven++;
+      return acc;
+    }, { win: 0, loss: 0, breakEven: 0 });
+    if (winLossChart) winLossChart.destroy();
+    winLossChart = new Chart(document.getElementById('winLossChart'), {
+      type: 'pie',
+      data: {
+        labels: ['Wins', 'Losses', 'Break-Even'],
+        datasets: [{
+          data: [winLossData.win, winLossData.loss, winLossData.breakEven],
+          backgroundColor: ['#32CD32', '#FF4040', '#d4af37'],
+          borderColor: '#fff',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { color: '#d4af37' } },
+          tooltip: { backgroundColor: '#252525', titleColor: '#d4af37', bodyColor: '#fff' }
+        },
