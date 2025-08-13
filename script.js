@@ -119,26 +119,26 @@ document.addEventListener('DOMContentLoaded', () => {
           tradesData.forEach(trade => {
             const row = document.createElement('tr');
             // Check for valid numbers before using toFixed
-            const entryPrice = parseFloat(trade.entryPrice);
-            const exitPrice = parseFloat(trade.exitPrice);
-            const takeProfit = parseFloat(trade.takeProfit);
-            const stopLoss = parseFloat(trade.stopLoss);
-            const pnlNet = parseFloat(trade.pnlNet);
-            const positionSize = parseFloat(trade.positionSize);
+            const entryPrice = parseFloat(trade['Entry Price']);
+            const exitPrice = parseFloat(trade['Exit Price']);
+            const takeProfit = parseFloat(trade['Take Profit']);
+            const stopLoss = parseFloat(trade['Stop Loss']);
+            const pnlNet = parseFloat(trade['P&L Net']);
+            const positionSize = parseFloat(trade['Position Size']);
 
             row.innerHTML = `
-              <td>${trade.date || ''}</td>
-              <td>${trade.symbol || ''}</td>
-              <td>${trade.assetType || ''}</td>
-              <td>${trade.buySell || ''}</td>
+              <td>${trade.Date || ''}</td>
+              <td>${trade.Symbol || ''}</td>
+              <td>${trade['Asset Type'] || ''}</td>
+              <td>${trade['Buy/Sell'] || ''}</td>
               <td>${!isNaN(entryPrice) ? entryPrice.toFixed(5) : 'N/A'}</td>
               <td>${!isNaN(exitPrice) ? exitPrice.toFixed(5) : 'N/A'}</td>
               <td>${!isNaN(takeProfit) ? takeProfit.toFixed(5) : 'N/A'}</td>
               <td>${!isNaN(stopLoss) ? stopLoss.toFixed(5) : 'N/A'}</td>
               <td>${!isNaN(pnlNet) ? pnlNet.toFixed(2) : 'N/A'}</td>
               <td>${!isNaN(positionSize) ? positionSize.toFixed(2) : 'N/A'}</td>
-              <td>${trade.strategyName || ''}</td>
-              <td>${trade.notes || ''}</td>
+              <td>${trade['Strategy Name'] || ''}</td>
+              <td>${trade.Notes || ''}</td>
             `;
             tradeTableBody.appendChild(row);
           });
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (timeFrame !== 'all') {
       const now = new Date();
       filteredTrades = trades.filter(trade => {
-        const tradeDate = new Date(trade.date);
+        const tradeDate = new Date(trade.Date);
         const timeDiff = now.getTime() - tradeDate.getTime();
         if (timeFrame === '7days') return timeDiff <= 7 * 24 * 60 * 60 * 1000;
         if (timeFrame === '30days') return timeDiff <= 30 * 24 * 60 * 60 * 1000;
@@ -190,8 +190,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (pnlDistributionChart) pnlDistributionChart.destroy();
 
     const timePnlData = filteredTrades.reduce((acc, trade) => {
-      const date = trade.date;
-      acc[date] = (acc[date] || 0) + parseFloat(trade.pnlNet);
+      const date = trade.Date;
+      acc[date] = (acc[date] || 0) + parseFloat(trade['P&L Net']);
       return acc;
     }, {});
     const timeLabels = Object.keys(timePnlData).sort();
@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const assetPnlData = filteredTrades.reduce((acc, trade) => {
-      acc[trade.assetType] = (acc[trade.assetType] || 0) + parseFloat(trade.pnlNet);
+      acc[trade['Asset Type']] = (acc[trade['Asset Type']] || 0) + parseFloat(trade['P&L Net']);
       return acc;
     }, {});
     const assetLabels = Object.keys(assetPnlData);
@@ -275,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const winLossData = filteredTrades.reduce((acc, trade) => {
-      const pnl = parseFloat(trade.pnlNet);
+      const pnl = parseFloat(trade['P&L Net']);
       if (pnl > 0) acc.win++;
       else if (pnl < 0) acc.loss++;
       else acc.breakEven++;
@@ -303,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    const pnlData = filteredTrades.map(trade => parseFloat(trade.pnlNet));
+    const pnlData = filteredTrades.map(trade => parseFloat(trade['P&L Net']));
     const pnlBins = [-1000, -500, -100, 0, 100, 500, 1000, Infinity];
     const pnlDistribution = pnlBins.slice(0, -1).map((bin, i) => ({
       label: `${bin} to ${pnlBins[i + 1] === Infinity ? '∞' : pnlBins[i + 1]}`,
@@ -427,7 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const csv = [
         headers.join(','),
         ...tradesData.map(trade => 
-          `${trade.date || ''},${trade.symbol || ''},${trade.assetType || ''},${trade.buySell || ''},${parseFloat(trade.entryPrice) || 0},${parseFloat(trade.exitPrice) || 0},${parseFloat(trade.takeProfit) || 0},${parseFloat(trade.stopLoss) || 0},${parseFloat(trade.pnlNet) || 0},${parseFloat(trade.positionSize) || 0},"${(trade.strategyName || '').replace(/"/g, '""')}","${(trade.notes || '').replace(/"/g, '""')}"`
+          `${trade.Date || ''},${trade.Symbol || ''},${trade['Asset Type'] || ''},${trade['Buy/Sell'] || ''},${parseFloat(trade['Entry Price']) || 0},${parseFloat(trade['Exit Price']) || 0},${parseFloat(trade['Take Profit']) || 0},${parseFloat(trade['Stop Loss']) || 0},${parseFloat(trade['P&L Net']) || 0},${parseFloat(trade['Position Size']) || 0},"${(trade['Strategy Name'] || '').replace(/"/g, '""')}","${(trade.Notes || '').replace(/"/g, '""')}"`
         )
       ].join('\n');
       downloadCSV(csv, 'trade_journal.csv');
@@ -441,8 +441,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       const timePnlData = tradesData.reduce((acc, trade) => {
-        const date = trade.date;
-        acc[date] = (acc[date] || 0) + parseFloat(trade.pnlNet);
+        const date = trade.Date;
+        acc[date] = (acc[date] || 0) + parseFloat(trade['P&L Net']);
         return acc;
       }, {});
       const timeLabels = Object.keys(timePnlData).sort();
