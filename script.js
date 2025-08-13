@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log(`Trading Journal loaded for user: ${userId}`);
 
   async function initializeUserSession() {
-    // Create user-specific sheet on load
     try {
       await fetch(workerUrl, {
         method: 'POST',
@@ -27,10 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Call the initialization function on page load
   initializeUserSession();
 
-  // Wait for MetaAPI SDK to load
   function initializeMetaApi() {
     return new Promise((resolve, reject) => {
       const checkMetaApi = setInterval(() => {
@@ -48,7 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Toggle entry form
   const addEntryButton = document.getElementById('add-entry-button');
   if (addEntryButton) {
     addEntryButton.addEventListener('click', () => {
@@ -57,7 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Form submission
   const tradeForm = document.getElementById('trade-form');
   if (tradeForm) {
     tradeForm.addEventListener('submit', async (e) => {
@@ -102,7 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Load trades from sheets
   async function loadTrades() {
     if (loader) loader.classList.remove('hidden');
     try {
@@ -152,7 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Chart functions
   let timePnlChart, assetPnlChart, winLossChart, pnlDistributionChart;
 
   async function updateCharts() {
@@ -183,13 +176,11 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Destroy existing charts
     if (timePnlChart) timePnlChart.destroy();
     if (assetPnlChart) assetPnlChart.destroy();
     if (winLossChart) winLossChart.destroy();
     if (pnlDistributionChart) pnlDistributionChart.destroy();
 
-    // Time-Based P&L (Line Chart)
     const timePnlData = filteredTrades.reduce((acc, trade) => {
       const date = trade.date;
       acc[date] = (acc[date] || 0) + parseFloat(trade.pnlNet);
@@ -239,7 +230,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Asset-Based P&L (Bar Chart)
     const assetPnlData = filteredTrades.reduce((acc, trade) => {
       acc[trade.assetType] = (acc[trade.assetType] || 0) + parseFloat(trade.pnlNet);
       return acc;
@@ -276,7 +266,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Win vs Loss Count (Pie Chart)
     const winLossData = filteredTrades.reduce((acc, trade) => {
       const pnl = parseFloat(trade.pnlNet);
       if (pnl > 0) acc.win++;
@@ -306,7 +295,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // P&L Distribution (Bar Chart)
     const pnlData = filteredTrades.map(trade => parseFloat(trade.pnlNet));
     const pnlBins = [-1000, -500, -100, 0, 100, 500, 1000, Infinity];
     const pnlDistribution = pnlBins.slice(0, -1).map((bin, i) => ({
@@ -346,7 +334,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Toggle views
   const tableTab = document.getElementById('table-tab');
   const analyticsTab = document.getElementById('analytics-tab');
   const tableView = document.getElementById('table-view');
@@ -369,14 +356,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Time frame change handler
   if (timeFrameSelect) {
     timeFrameSelect.addEventListener('change', () => {
       updateCharts();
     });
   }
 
-  // Sync Modal
   const syncButton = document.getElementById('sync-mt-button');
   const closeModal = document.querySelector('#sync-modal .close');
   const syncForm = document.getElementById('sync-form');
@@ -424,7 +409,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Export Table CSV
   if (exportTableCsv) {
     exportTableCsv.addEventListener('click', () => {
       if (!tradesData || tradesData.length === 0) {
@@ -442,7 +426,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Export Analytics CSV (Time-Based P&L)
   if (exportAnalyticsCsv) {
     exportAnalyticsCsv.addEventListener('click', () => {
       if (!tradesData || tradesData.length === 0) {
