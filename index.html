@@ -6,6 +6,7 @@
   <title>Traders Gazette Terminal (Test)</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/metaapi.cloud-sdk@0.10.0/dist/index.js"></script>
 </head>
 <body class="trading-journal">
   <div class="journal-cover-photo"></div>
@@ -98,6 +99,9 @@
           <option value="30days">Last 30 Days</option>
         </select>
       </div>
+      <div class="export-button">
+        <button id="export-analytics-csv" class="submit-button">Download CSV</button>
+      </div>
       <div class="analytics-grid">
         <div class="chart-card">
           <h4>Time-Based P&L</h4>
@@ -119,6 +123,9 @@
     </div>
     <div class="journal-data-card" id="table-view">
       <h3 class="widget-title">Trade Journal Log</h3>
+      <div class="export-button">
+        <button id="export-table-csv" class="submit-button">Download CSV</button>
+      </div>
       <div class="journal-table-container">
         <table id="journalTable">
           <thead>
