@@ -211,6 +211,8 @@ tbody tr:hover {
   padding: 25px;
   border-radius: 12px;
   box-shadow: 0 6px 15px rgba(0,0,0,0.5);
+  height: 350px; /* Fixed height to control chart growth */
+  overflow: hidden;
 }
 
 .chart-card h4 {
