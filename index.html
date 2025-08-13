@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27,6 +26,7 @@
     <div class="action-buttons">
       <button id="add-entry-button" class="submit-button">Add New Entry</button>
       <button id="sync-mt-button" class="submit-button">Sync MT4/5 Trades</button>
+      <button id="upload-csv-button" class="submit-button">Upload CSV</button>
     </div>
     <div class="journal-entry-form-card hidden" id="entry-form-card">
       <h2 class="widget-title">Add a New Trade</h2>
@@ -190,6 +190,20 @@
             <input type="text" id="mt-nickname">
           </div>
           <button type="submit" class="submit-button">Connect and Sync</button>
+        </form>
+      </div>
+    </div>
+    <div id="upload-csv-modal" class="modal hidden">
+      <div class="modal-content">
+        <span class="close" id="close-csv-modal">&times;</span>
+        <h2>Upload Trades via CSV</h2>
+        <p>Your CSV headers must match: Date, Symbol, Asset Type, Buy/Sell, Entry Price, Exit Price, Take Profit, Stop Loss, P&L Net, Position Size, Strategy Name, Notes, dealId (optional)</p>
+        <form id="upload-csv-form">
+          <div class="form-group full-width">
+            <label for="csv-file">Select CSV File:</label>
+            <input type="file" id="csv-file" accept=".csv" required>
+          </div>
+          <button type="submit" class="submit-button">Upload and Sync</button>
         </form>
       </div>
     </div>
