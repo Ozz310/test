@@ -241,6 +241,11 @@ tbody tr:hover {
   border-radius: 8px;
 }
 
+.export-button {
+  margin-bottom: 20px;
+  text-align: right;
+}
+
 .loader {
   position: fixed;
   top: 50%;
@@ -357,5 +362,8 @@ tbody tr:hover {
   .action-buttons {
     flex-direction: column;
     gap: 10px;
+  }
+  .export-button {
+    text-align: center;
   }
 }
