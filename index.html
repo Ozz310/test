@@ -90,22 +90,30 @@
     </div>
     <div class="journal-data-card" id="analytics-view" style="display: none;">
       <h3 class="widget-title">Analytics View</h3>
+      <div class="time-frame-selector">
+        <label for="time-frame">Time Frame:</label>
+        <select id="time-frame">
+          <option value="all">All Time</option>
+          <option value="7days">Last 7 Days</option>
+          <option value="30days">Last 30 Days</option>
+        </select>
+      </div>
       <div class="analytics-grid">
         <div class="chart-card">
           <h4>Time-Based P&L</h4>
-          <canvas id="timePnlChart"></canvas>
+          <canvas id="timePnlChart" height="300"></canvas>
         </div>
         <div class="chart-card">
           <h4>Asset-Based P&L</h4>
-          <canvas id="assetPnlChart"></canvas>
+          <canvas id="assetPnlChart" height="300"></canvas>
         </div>
         <div class="chart-card">
           <h4>Win vs Loss Count</h4>
-          <canvas id="winLossChart"></canvas>
+          <canvas id="winLossChart" height="300"></canvas>
         </div>
         <div class="chart-card">
           <h4>P&L Distribution</h4>
-          <canvas id="pnlDistributionChart"></canvas>
+          <canvas id="pnlDistributionChart" height="300"></canvas>
         </div>
       </div>
     </div>
