@@ -5,20 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Traders Gazette Terminal (Test)</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="https://ozz310.github.io/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="https://raw.githubusercontent.com/Ozz310/tradersgazetteterminal/main/images/favicon.ico" type="image/x-icon">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     (function() {
       const script = document.createElement('script');
-      script.src = 'https://unpkg.com/metaapi.cloud-sdk@1.0.0/dist/index.js';
+      // Using a more reliable, general CDN for MetaAPI SDK
+      script.src = 'https://unpkg.com/metaapi.cloud-sdk';
       script.onload = () => console.log('MetaAPI SDK loaded successfully');
       script.onerror = (e) => {
-        console.error('Failed to load MetaAPI SDK from CDN:', e);
-        const fallbackScript = document.createElement('script');
-        fallbackScript.src = 'https://metaapi.cloud/static/sdk/metaapi.cloud.sdk.latest.js';
-        fallbackScript.onload = () => console.log('MetaAPI SDK loaded from fallback');
-        fallbackScript.onerror = () => console.error('All attempts to load MetaAPI SDK failed');
-        document.head.appendChild(fallbackScript);
+        console.error('Failed to load MetaAPI SDK:', e);
       };
       document.head.appendChild(script);
     })();
