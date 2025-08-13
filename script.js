@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const notification = document.getElementById('notification');
   const entryFormCard = document.getElementById('entry-form-card');
   const syncModal = document.getElementById('sync-modal');
+  const timeFrameSelect = document.getElementById('time-frame');
 
   // Automatic sheet creation on load
   fetch(workerUrl, {
@@ -144,15 +145,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Update charts with modern visuals
+  // Update charts with time frame filter
   let timePnlChart, assetPnlChart, winLossChart, pnlDistributionChart;
 
   async function updateCharts() {
     const trades = await loadTrades();
-    if (trades.length === 0) return;
+    const timeFrame = timeFrameSelect ? timeFrameSelect.value : 'all';
+    let filteredTrades = [...trades];
+
+    if (timeFrame !== 'all') {
+      const now = new Date();
+      filteredTrades = trades.filter(trade => {
+        const tradeDate = new Date(trade.date);
+        if (timeFrame === '7days') {
+          return (now - tradeDate) <= 7 * 24 * 60 * 60 * 1000;
+        } else if (timeFrame === '30days') {
+          return (now - tradeDate) <= 30 * 24 * 60 * 60 * 1000;
+        }
+        return true;
+      });
+    }
+
+    if (filteredTrades.length === 0) return;
 
     // Time-Based P&L (Line Chart)
-    const timePnlData = trades.reduce((acc, trade) => {
+    const timePnlData = filteredTrades.reduce((acc, trade) => {
       const date = trade.date;
       acc[date] = (acc[date] || 0) + trade.pnlNet;
       return acc;
@@ -198,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Asset-Based P&L (Bar Chart)
-    const assetPnlData = trades.reduce((acc, trade) => {
+    const assetPnlData = filteredTrades.reduce((acc, trade) => {
       acc[trade.assetType] = (acc[trade.assetType] || 0) + trade.pnlNet;
       return acc;
     }, {});
@@ -236,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Win vs Loss Count (Pie Chart)
-    const winLossData = trades.reduce((acc, trade) => {
+    const winLossData = filteredTrades.reduce((acc, trade) => {
       if (trade.pnlNet > 0) acc.win++;
       else if (trade.pnlNet < 0) acc.loss++;
       else acc.breakEven++;
@@ -266,7 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // P&L Distribution (Bar Chart)
-    const pnlData = trades.map(trade => trade.pnlNet);
+    const pnlData = filteredTrades.map(trade => trade.pnlNet);
     const pnlBins = [-1000, -500, -100, 0, 100, 500, 1000, Infinity];
     const pnlDistribution = pnlBins.slice(0, -1).map((bin, i) => ({
       label: `${bin} to ${pnlBins[i + 1] === Infinity ? '∞' : pnlBins[i + 1]}`,
@@ -332,6 +349,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initial load
   loadTrades();
   if (analyticsTab && analyticsTab.classList.contains('active')) updateCharts();
+
+  // Time frame change handler
+  if (timeFrameSelect) {
+    timeFrameSelect.addEventListener('change', () => {
+      updateCharts();
+    });
+  }
 
   // Sync Modal
   const syncButton = document.getElementById('sync-mt-button');
