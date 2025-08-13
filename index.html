@@ -10,7 +10,6 @@
   <script>
     (function() {
       const script = document.createElement('script');
-      // Using a reliable CDN for the MetaAPI SDK
       script.src = 'https://cdn.jsdelivr.net/npm/metaapi.cloud-sdk@29.3.1/lib/metaApi/index.js';
       script.onload = () => console.log('MetaAPI SDK loaded successfully');
       script.onerror = (e) => {
