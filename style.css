@@ -22,7 +22,8 @@ a {
 /* Journal-specific layout */
 .journal-cover-photo {
   height: 250px;
-  background-image: url('https://raw.githubusercontent.com/Ozz310/tradersgazetteterminal/main/images/journal-cover.jpg');
+  /* Corrected URL to ensure the cover photo loads */
+  background-image: url('https://raw.githubusercontent.com/Ozz310/tradersgazetteterminal/main/images/Trading%20Journal.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -280,4 +281,17 @@ textarea:focus {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Analytics-specific fixes */
+.analytics-grid {
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 20px;
+}
+.chart-card {
+  height: 350px;
+}
+.chart-card canvas {
+  min-height: 300px; /* Ensures a fixed height for the canvas */
+  max-height: 300px;
 }
