@@ -118,17 +118,25 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           tradesData.forEach(trade => {
             const row = document.createElement('tr');
+            // Check for valid numbers before using toFixed
+            const entryPrice = parseFloat(trade.entryPrice);
+            const exitPrice = parseFloat(trade.exitPrice);
+            const takeProfit = parseFloat(trade.takeProfit);
+            const stopLoss = parseFloat(trade.stopLoss);
+            const pnlNet = parseFloat(trade.pnlNet);
+            const positionSize = parseFloat(trade.positionSize);
+
             row.innerHTML = `
               <td>${trade.date || ''}</td>
               <td>${trade.symbol || ''}</td>
               <td>${trade.assetType || ''}</td>
               <td>${trade.buySell || ''}</td>
-              <td>${parseFloat(trade.entryPrice).toFixed(5)}</td>
-              <td>${parseFloat(trade.exitPrice).toFixed(5)}</td>
-              <td>${parseFloat(trade.takeProfit).toFixed(5)}</td>
-              <td>${parseFloat(trade.stopLoss).toFixed(5)}</td>
-              <td>${parseFloat(trade.pnlNet).toFixed(2)}</td>
-              <td>${parseFloat(trade.positionSize).toFixed(2)}</td>
+              <td>${!isNaN(entryPrice) ? entryPrice.toFixed(5) : 'N/A'}</td>
+              <td>${!isNaN(exitPrice) ? exitPrice.toFixed(5) : 'N/A'}</td>
+              <td>${!isNaN(takeProfit) ? takeProfit.toFixed(5) : 'N/A'}</td>
+              <td>${!isNaN(stopLoss) ? stopLoss.toFixed(5) : 'N/A'}</td>
+              <td>${!isNaN(pnlNet) ? pnlNet.toFixed(2) : 'N/A'}</td>
+              <td>${!isNaN(positionSize) ? positionSize.toFixed(2) : 'N/A'}</td>
               <td>${trade.strategyName || ''}</td>
               <td>${trade.notes || ''}</td>
             `;
@@ -419,7 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const csv = [
         headers.join(','),
         ...tradesData.map(trade => 
-          `${trade.date || ''},${trade.symbol || ''},${trade.assetType || ''},${trade.buySell || ''},${parseFloat(trade.entryPrice).toFixed(5)},${parseFloat(trade.exitPrice).toFixed(5)},${parseFloat(trade.takeProfit).toFixed(5)},${parseFloat(trade.stopLoss).toFixed(5)},${parseFloat(trade.pnlNet).toFixed(2)},${parseFloat(trade.positionSize).toFixed(2)},"${(trade.strategyName || '').replace(/"/g, '""')}","${(trade.notes || '').replace(/"/g, '""')}"`
+          `${trade.date || ''},${trade.symbol || ''},${trade.assetType || ''},${trade.buySell || ''},${parseFloat(trade.entryPrice) || 0},${parseFloat(trade.exitPrice) || 0},${parseFloat(trade.takeProfit) || 0},${parseFloat(trade.stopLoss) || 0},${parseFloat(trade.pnlNet) || 0},${parseFloat(trade.positionSize) || 0},"${(trade.strategyName || '').replace(/"/g, '""')}","${(trade.notes || '').replace(/"/g, '""')}"`
         )
       ].join('\n');
       downloadCSV(csv, 'trade_journal.csv');
