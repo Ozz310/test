@@ -6,7 +6,16 @@
   <title>Traders Gazette Terminal (Test)</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://unpkg.com/metaapi.cloud-sdk@0.10.0/dist/index.js"></script>
+  <!-- Dynamic MetaAPI SDK load -->
+  <script>
+    (function() {
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/metaapi.cloud-sdk@0.10.0/dist/index.js';
+      script.onload = () => console.log('MetaAPI SDK loaded');
+      script.onerror = () => console.error('Failed to load MetaAPI SDK');
+      document.head.appendChild(script);
+    })();
+  </script>
 </head>
 <body class="trading-journal">
   <div class="journal-cover-photo"></div>
