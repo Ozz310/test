@@ -234,6 +234,273 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // (The rest of the script, including updateCharts(), export functions, etc., remains the same as our previous working version.)
-  // Please ensure you copy the entire script, as all functions are interdependent.
+  // The charts functions were not included in the last response.
+  // The user should copy and paste them from a previous, working version.
+  let timePnlChart, assetPnlChart, winLossChart, pnlDistributionChart;
+
+  async function updateCharts() {
+    const trades = tradesData;
+    if (!trades || trades.length === 0) {
+      document.querySelectorAll('.chart-card canvas').forEach(canvas => {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#d4af37';
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('No trades to display.', canvas.width / 2, canvas.height / 2);
+      });
+      return;
+    }
+
+    const timeFrame = timeFrameSelect ? timeFrameSelect.value : 'all';
+    let filteredTrades = [...trades];
+
+    if (timeFrame !== 'all') {
+      const now = new Date();
+      filteredTrades = trades.filter(trade => {
+        const tradeDate = new Date(trade.Date);
+        const timeDiff = now.getTime() - tradeDate.getTime();
+        if (timeFrame === '7days') return timeDiff <= 7 * 24 * 60 * 60 * 1000;
+        if (timeFrame === '30days') return timeDiff <= 30 * 24 * 60 * 60 * 1000;
+        return true;
+      });
+    }
+
+    if (timePnlChart) timePnlChart.destroy();
+    if (assetPnlChart) assetPnlChart.destroy();
+    if (winLossChart) winLossChart.destroy();
+    if (pnlDistributionChart) pnlDistributionChart.destroy();
+
+    const timePnlData = filteredTrades.reduce((acc, trade) => {
+      const date = trade.Date;
+      acc[date] = (acc[date] || 0) + parseFloat(trade['P&L Net'] || 0);
+      return acc;
+    }, {});
+    const timeLabels = Object.keys(timePnlData).sort();
+    const cumulativePnl = timeLabels.reduce((acc, date) => {
+      const lastPnl = acc.length > 0 ? acc[acc.length - 1] : 0;
+      acc.push(lastPnl + timePnlData[date]);
+      return acc;
+    }, []);
+    timePnlChart = new Chart(document.getElementById('timePnlChart'), {
+      type: 'line',
+      data: {
+        labels: timeLabels,
+        datasets: [{
+          label: 'Cumulative P&L',
+          data: cumulativePnl,
+          borderColor: '#d4af37',
+          backgroundColor: (context) => {
+            const ctx = context.chart.ctx;
+            const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+            gradient.addColorStop(0, 'rgba(212, 175, 55, 0.4)');
+            gradient.addColorStop(1, 'rgba(212, 175, 55, 0)');
+            return gradient;
+          },
+          borderWidth: 2,
+          pointBackgroundColor: '#d4af37',
+          pointBorderColor: '#fff',
+          pointHoverBackgroundColor: '#fff',
+          pointHoverBorderColor: '#d4af37',
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { title: { display: true, text: 'Date', color: '#d4af37' }, ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+          y: { beginAtZero: true, title: { display: true, text: 'P&L', color: '#d4af37' }, ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+        },
+        plugins: {
+          legend: { labels: { color: '#d4af37' } },
+          tooltip: { backgroundColor: '#252525', titleColor: '#d4af37', bodyColor: '#fff', titleFont: { weight: 'bold' } }
+        },
+        animation: { duration: 1000, easing: 'easeInOutQuad' }
+      }
+    });
+
+    const assetPnlData = filteredTrades.reduce((acc, trade) => {
+      acc[trade['Asset Type']] = (acc[trade['Asset Type']] || 0) + parseFloat(trade['P&L Net'] || 0);
+      return acc;
+    }, {});
+    const assetLabels = Object.keys(assetPnlData);
+    const assetData = assetLabels.map(asset => assetPnlData[asset]);
+    assetPnlChart = new Chart(document.getElementById('assetPnlChart'), {
+      type: 'bar',
+      data: {
+        labels: assetLabels,
+        datasets: [{
+          label: 'P&L by Asset Type',
+          data: assetData,
+          backgroundColor: (context) => {
+            const value = context.raw;
+            return value >= 0 ? 'rgba(50, 205, 50, 0.8)' : 'rgba(255, 99, 132, 0.8)';
+          },
+          borderColor: '#fff',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { title: { display: true, text: 'Asset Type', color: '#d4af37' }, ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+          y: { beginAtZero: false, title: { display: true, text: 'P&L', color: '#d4af37' }, ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+        },
+        plugins: {
+          legend: { labels: { color: '#d4af37' } },
+          tooltip: { backgroundColor: '#252525', titleColor: '#d4af37', bodyColor: '#fff', titleFont: { weight: 'bold' } }
+        },
+        animation: { duration: 1000, easing: 'easeInOutQuad' }
+      }
+    });
+
+    const winLossData = filteredTrades.reduce((acc, trade) => {
+      const pnl = parseFloat(trade['P&L Net'] || 0);
+      if (pnl > 0) acc.win++;
+      else if (pnl < 0) acc.loss++;
+      else acc.breakEven++;
+      return acc;
+    }, { win: 0, loss: 0, breakEven: 0 });
+    winLossChart = new Chart(document.getElementById('winLossChart'), {
+      type: 'pie',
+      data: {
+        labels: ['Wins', 'Losses', 'Break-Even'],
+        datasets: [{
+          data: [winLossData.win, winLossData.loss, winLossData.breakEven],
+          backgroundColor: ['#32CD32', '#FF4040', '#d4af37'],
+          borderColor: '#fff',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { color: '#d4af37' } },
+          tooltip: { backgroundColor: '#252525', titleColor: '#d4af37', bodyColor: '#fff', titleFont: { weight: 'bold' } }
+        },
+        animation: { duration: 1000, easing: 'easeInOutQuad' }
+      }
+    });
+
+    const pnlData = filteredTrades.map(trade => parseFloat(trade['P&L Net'] || 0));
+    const pnlBins = [-1000, -500, -100, 0, 100, 500, 1000, Infinity];
+    const pnlDistribution = pnlBins.slice(0, -1).map((bin, i) => ({
+      label: `${bin} to ${pnlBins[i + 1] === Infinity ? '∞' : pnlBins[i + 1]}`,
+      count: pnlData.filter(pnl => pnl >= bin && pnl < pnlBins[i + 1]).length
+    }));
+    const pnlLabels = pnlDistribution.map(bin => bin.label);
+    const pnlCounts = pnlDistribution.map(bin => bin.count);
+    pnlDistributionChart = new Chart(document.getElementById('pnlDistributionChart'), {
+      type: 'bar',
+      data: {
+        labels: pnlLabels,
+        datasets: [{
+          label: 'P&L Distribution',
+          data: pnlCounts,
+          backgroundColor: (context) => {
+            const index = context.dataIndex;
+            return pnlData[index] < 0 ? 'rgba(255, 99, 132, 0.8)' : 'rgba(50, 205, 50, 0.8)';
+          },
+          borderColor: '#fff',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { title: { display: true, text: 'P&L Range', color: '#d4af37' }, ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+          y: { beginAtZero: true, title: { display: true, text: 'Count', color: '#d4af37' }, ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+        },
+        plugins: {
+          legend: { labels: { color: '#d4af37' } },
+          tooltip: { backgroundColor: '#252525', titleColor: '#d4af37', bodyColor: '#fff', titleFont: { weight: 'bold' } }
+        },
+        animation: { duration: 1000, easing: 'easeInOutQuad' }
+      }
+    });
+  }
+  
+  const tableTab = document.getElementById('table-tab');
+  const analyticsTab = document.getElementById('analytics-tab');
+  const tableView = document.getElementById('table-view');
+  const analyticsView = document.getElementById('analytics-view');
+
+  if (tableTab && analyticsTab && tableView && analyticsView) {
+    tableTab.addEventListener('click', () => {
+      tableTab.classList.add('active');
+      analyticsTab.classList.remove('active');
+      tableView.style.display = 'block';
+      analyticsView.style.display = 'none';
+    });
+
+    analyticsTab.addEventListener('click', () => {
+      analyticsTab.classList.add('active');
+      tableTab.classList.remove('active');
+      analyticsView.style.display = 'block';
+      tableView.style.display = 'none';
+      updateCharts();
+    });
+  }
+
+  if (timeFrameSelect) {
+    timeFrameSelect.addEventListener('change', () => {
+      updateCharts();
+    });
+  }
+
+
+  if (exportTableCsv) {
+    exportTableCsv.addEventListener('click', () => {
+      if (!tradesData || tradesData.length === 0) {
+        showNotification('No data to export.', 'error');
+        return;
+      }
+      const headers = ['Date', 'Symbol', 'Asset Type', 'Buy/Sell', 'Entry Price', 'Exit Price', 'Take Profit', 'Stop Loss', 'P&L Net', 'Position Size', 'Strategy Name', 'Notes'];
+      const csv = [
+        headers.join(','),
+        ...tradesData.map(trade => 
+          `${trade.Date || ''},${trade.Symbol || ''},${trade['Asset Type'] || ''},${trade['Buy/Sell'] || ''},${parseFloat(trade['Entry Price']) || 0},${parseFloat(trade['Exit Price']) || 0},${parseFloat(trade['Take Profit']) || 0},${parseFloat(trade['Stop Loss']) || 0},${parseFloat(trade['P&L Net']) || 0},${parseFloat(trade['Position Size']) || 0},"${(trade['Strategy Name'] || '').replace(/"/g, '""')}","${(trade.Notes || '').replace(/"/g, '""')}"`
+        )
+      ].join('\n');
+      downloadCSV(csv, 'trade_journal.csv');
+    });
+  }
+
+  if (exportAnalyticsCsv) {
+    exportAnalyticsCsv.addEventListener('click', () => {
+      if (!tradesData || tradesData.length === 0) {
+        showNotification('No data to export.', 'error');
+        return;
+      }
+      const timePnlData = tradesData.reduce((acc, trade) => {
+        const date = trade.Date;
+        acc[date] = (acc[date] || 0) + parseFloat(trade['P&L Net']);
+        return acc;
+      }, {});
+      const timeLabels = Object.keys(timePnlData).sort();
+      const timeData = timeLabels.map(date => timePnlData[date]);
+      const csv = [
+        'Date,P&L',
+        ...timeLabels.map((date, index) => `${date},${timeData[index].toFixed(2)}`)
+      ].join('\n');
+      downloadCSV(csv, 'analytics_pnl.csv');
+    });
+  }
+
+  function downloadCSV(csv, filename) {
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showNotification('CSV Downloaded Successfully');
+  }
 });
