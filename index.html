@@ -6,6 +6,208 @@
   <title>Traders Gazette Terminal (Test)</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Dynamic MetaAPI SDK load with fallback -->
+  <script>
+    (function() {
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/metaapi.cloud-sdk@1.0.0/dist/index.js'; // Updated to a stable version
+      script.onload = () => console.log('MetaAPI SDK loaded successfully');
+      script.onerror = (e) => {
+        console.error('Failed to load MetaAPI SDK from CDN:', e);
+        // Fallback: Load from another source or local if available
+        const fallbackScript = document.createElement('script');
+        fallbackScript.src = 'https://metaapi.cloud/static/sdk/metaapi.cloud.sdk.latest.js'; // Alternative source
+        fallbackScript.onload = () => console.log('MetaAPI SDK loaded from fallback');
+        fallbackScript.onerror = () => console.error('All attempts to load MetaAPI SDK failed');
+        document.head.appendChild(fallbackScript);
+      };
+      document.head.appendChild(script);
+    })();
+  </script>
+</head>
+<body class="trading-journal">
+  <div class="journal-cover-photo"></div>
+  <div class="journal-content-container">
+    <div class="action-buttons">
+      <button id="add-entry-button" class="submit-button">Add New Entry</button>
+      <button id="sync-mt-button" class="submit-button">Sync MT4/5 Trades</button>
+    </div>
+    <div class="journal-entry-form-card hidden" id="entry-form-card">
+      <h2 class="widget-title">Add a New Trade</h2>
+      <form id="trade-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="date">Date:</label>
+            <input type="date" id="date" required>
+          </div>
+          <div class="form-group">
+            <label for="symbol">Symbol:</label>
+            <input type="text" id="symbol" required>
+          </div>
+          <div class="form-group">
+            <label for="assetType">Asset Type:</label>
+            <select id="assetType" required>
+              <option value="Forex">Forex</option>
+              <option value="Crypto">Crypto</option>
+              <option value="Indices">Indices</option>
+              <option value="Commodities">Commodities</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="buySell">Buy/Sell:</label>
+            <select id="buySell" required>
+              <option value="Buy">Buy</option>
+              <option value="Sell">Sell</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="entryPrice">Entry Price:</label>
+            <input type="number" id="entryPrice" step="0.00001" required>
+          </div>
+          <div class="form-group">
+            <label for="exitPrice">Exit Price:</label>
+            <input type="number" id="exitPrice" step="0.00001">
+          </div>
+          <div class="form-group">
+            <label for="takeProfit">Take Profit:</label>
+            <input type="number" id="takeProfit" step="0.00001">
+          </div>
+          <div class="form-group">
+            <label for="stopLoss">Stop Loss:</label>
+            <input type="number" id="stopLoss" step="0.00001">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="pnlNet">P&L Net:</label>
+            <input type="number" id="pnlNet" step="0.00001">
+          </div>
+          <div class="form-group">
+            <label for="positionSize">Position Size:</label>
+            <input type="number" id="positionSize" step="0.00001">
+          </div>
+          <div class="form-group">
+            <label for="strategyName">Strategy Name:</label>
+            <input type="text" id="strategyName">
+          </div>
+        </div>
+        <div class="form-group full-width">
+          <label for="notes">Notes:</label>
+          <textarea id="notes"></textarea>
+        </div>
+        <button type="submit" class="submit-button">Add Entry</button>
+      </form>
+      <div id="loader" class="loader hidden"></div>
+      <div id="notification" class="notification hidden"></div>
+    </div>
+    <div class="tab-switcher">
+      <button class="tab active" id="table-tab">Table View</button>
+      <button class="tab" id="analytics-tab">Analytics View</button>
+    </div>
+    <div class="journal-data-card" id="analytics-view" style="display: none;">
+      <h3 class="widget-title">Analytics View</h3>
+      <div class="time-frame-selector">
+        <label for="time-frame">Time Frame:</label>
+        <select id="time-frame">
+          <option value="all">All Time</option>
+          <option value="7days">Last 7 Days</option>
+          <option value="30days">Last 30 Days</option>
+        </select>
+      </div>
+      <div class="export-button">
+        <button id="export-analytics-csv" class="submit-button">Download CSV</button>
+      </div>
+      <div class="analytics-grid">
+        <div class="chart-card">
+          <h4>Time-Based P&L</h4>
+          <canvas id="timePnlChart" height="300"></canvas>
+        </div>
+        <div class="chart-card">
+          <h4>Asset-Based P&L</h4>
+          <canvas id="assetPnlChart" height="300"></canvas>
+        </div>
+        <div class="chart-card">
+          <h4>Win vs Loss Count</h4>
+          <canvas id="winLossChart" height="300"></canvas>
+        </div>
+        <div class="chart-card">
+          <h4>P&L Distribution</h4>
+          <canvas id="pnlDistributionChart" height="300"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="journal-data-card" id="table-view">
+      <h3 class="widget-title">Trade Journal Log</h3>
+      <div class="export-button">
+        <button id="export-table-csv" class="submit-button">Download CSV</button>
+      </div>
+      <div class="journal-table-container">
+        <table id="journalTable">
+          <thead>
+            <tr>
+              <th data-sort="date">Date</th>
+              <th data-sort="symbol">Symbol</th>
+              <th data-sort="assetType">Asset Type</th>
+              <th data-sort="buySell">Buy/Sell</th>
+              <th data-sort="entryPrice">Entry Price</th>
+              <th data-sort="exitPrice">Exit Price</th>
+              <th data-sort="takeProfit">Take Profit</th>
+              <th data-sort="stopLoss">Stop Loss</th>
+              <th data-sort="pnlNet">P&L Net</th>
+              <th data-sort="positionSize">Position Size</th>
+              <th data-sort="strategyName">Strategy Name</th>
+              <th data-sort="notes">Notes</th>
+            </tr>
+          </thead>
+          <tbody id="trade-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="sync-modal" class="modal hidden">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Connect MT4/MT5 Account</h2>
+        <form id="sync-form">
+          <div class="form-group">
+            <label for="platform">Platform:</label>
+            <select id="platform" required>
+              <option value="mt4">MT4</option>
+              <option value="mt5">MT5</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="server">Broker Server:</label>
+            <input type="text" id="server" required>
+          </div>
+          <div class="form-group">
+            <label for="accountNumber">Account Number:</label>
+            <input type="text" id="accountNumber" required>
+          </div>
+          <div class="form-group">
+            <label for="password">Investor Password:</label>
+            <input type="password" id="password" required>
+          </div>
+          <div class="form-group">
+            <label for="nickname">Account Nickname (Optional):</label>
+            <input type="text" id="nickname">
+          </div>
+          <button type="submit" class="submit-button">Connect and Sync</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traders Gazette Terminal (Test)</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Dynamic MetaAPI SDK load -->
   <script>
     (function() {
