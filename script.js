@@ -11,13 +11,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const timeFrameSelect = document.getElementById('time-frame');
   const exportTableCsv = document.getElementById('export-table-csv');
   const exportAnalyticsCsv = document.getElementById('export-analytics-csv');
+  let metaApi, account;
 
-  // MetaAPI Setup (Replace with your token and account details)
-  const metaApi = new MetaApi({
-    token: 'demo_12345', // Replace with your MetaAPI token from https://metaapi.cloud
-    domain: 'app.metaapi.cloud'
-  });
-  let account;
+  // Wait for MetaAPI SDK to load
+  function initializeMetaApi() {
+    return new Promise((resolve) => {
+      const checkMetaApi = setInterval(() => {
+        if (typeof window.MetaApi !== 'undefined') {
+          metaApi = new window.MetaApi({
+            token: 'demo_12345', // Replace with your MetaAPI token from https://metaapi.cloud
+            domain: 'app.metaapi.cloud'
+          });
+          clearInterval(checkMetaApi);
+          resolve();
+        }
+      }, 100);
+    });
+  }
 
   // Automatic sheet creation on load
   fetch(workerUrl, {
@@ -117,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       if (!response.ok) throw new Error('Network response was not ok');
       const trades = await response.json();
+      console.log('Trades loaded:', trades); // Debug log
       const tradeTableBody = document.getElementById('trade-table-body');
       if (tradeTableBody) {
         tradeTableBody.innerHTML = '';
@@ -368,7 +379,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const syncForm = document.getElementById('sync-form');
 
   if (syncButton && closeModal && syncForm) {
-    syncButton.addEventListener('click', () => syncModal.classList.remove('hidden'));
+    syncButton.addEventListener('click', () => {
+      if (!metaApi) {
+        initializeMetaApi().then(() => syncModal.classList.remove('hidden'));
+      } else {
+        syncModal.classList.remove('hidden');
+      }
+    });
     closeModal.addEventListener('click', () => syncModal.classList.add('hidden'));
     window.addEventListener('click', (e) => {
       if (e.target === syncModal) syncModal.classList.add('hidden');
@@ -388,97 +405,5 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('mtCredentials', btoa(JSON.stringify(credentials)));
 
       try {
-        // Initialize MetaAPI account
-        account = await metaApi.metatraderAccountApi.getAccount('your-account-id'); // Replace with your account ID
-        await account.waitSynchronized();
-        const trades = await account.getPositions();
-        const tradeDataArray = trades.map(trade => ({
-          date: new Date(trade.time).toISOString().split('T')[0],
-          symbol: trade.symbol,
-          assetType: 'Forex', // Adjust based on your needs
-          buySell: trade.type === 'BUY' ? 'Buy' : 'Sell',
-          entryPrice: trade.entryPrice,
-          exitPrice: trade.currentPrice || 0,
-          takeProfit: trade.stopLossPrice || 0,
-          stopLoss: trade.takeProfitPrice || 0,
-          pnlNet: trade.profit || 0,
-          positionSize: trade.volume,
-          strategyName: '',
-          notes: ''
-        }));
-
-        // Save trades to worker
-        for (const tradeData of tradeDataArray) {
-          await fetch(workerUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'writeTrade', tradeData })
-          });
-        }
-
-        if (notification) {
-          notification.textContent = 'Trades Synced Successfully';
-          notification.classList.remove('hidden');
-          setTimeout(() => notification.classList.add('hidden'), 3000);
-        }
-        syncModal.classList.add('hidden');
-        loadTrades();
-        updateCharts();
-      } catch (error) {
-        alert('Error syncing trades: ' + error.message);
-        console.error('Sync Error:', error);
-      } finally {
-        if (loader) loader.classList.add('hidden');
-      }
-    });
-  }
-
-  // Export Table CSV
-  if (exportTableCsv) {
-    exportTableCsv.addEventListener('click', () => {
-      const trades = loadTrades();
-      const csv = [
-        ['Date,Symbol,Asset Type,Buy/Sell,Entry Price,Exit Price,Take Profit,Stop Loss,P&L Net,Position Size,Strategy Name,Notes'],
-        ...trades.then(trades => trades.map(trade =>
-          `${trade.date || ''},${trade.symbol || ''},${trade.assetType || ''},${trade.buySell || ''},${trade.entryPrice.toFixed(5)},${trade.exitPrice.toFixed(5)},${trade.takeProfit.toFixed(5)},${trade.stopLoss.toFixed(5)},${trade.pnlNet.toFixed(2)},${trade.positionSize.toFixed(2)},${trade.strategyName || ''},${trade.notes || ''}`
-        ))
-      ].join('\n');
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'trade_journal.csv';
-      a.click();
-      window.URL.revokeObjectURL(url);
-    });
-  }
-
-  // Export Analytics CSV (Time-Based P&L)
-  if (exportAnalyticsCsv) {
-    exportAnalyticsCsv.addEventListener('click', async () => {
-      const trades = await loadTrades();
-      const timePnlData = trades.reduce((acc, trade) => {
-        const date = trade.date;
-        acc[date] = (acc[date] || 0) + trade.pnlNet;
-        return acc;
-      }, {});
-      const timeLabels = Object.keys(timePnlData).sort();
-      const timeData = timeLabels.map(date => timePnlData[date]);
-      const csv = [
-        ['Date,P&L'],
-        ...timeLabels.map((date, index) => `${date},${timeData[index].toFixed(2)}`)
-      ].join('\n');
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'analytics_pnl.csv';
-      a.click();
-      window.URL.revokeObjectURL(url);
-    });
-  }
-
-  // Initial load
-  loadTrades();
-  if (analyticsTab && analyticsTab.classList.contains('active')) updateCharts();
-});
+        if (!metaApi) await initializeMetaApi();
+        account = await metaApi.metatraderAccountApi.getAccount('your-account-id'); // Replace with your MetaAPI account
