@@ -266,4 +266,237 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         plugins: {
           legend: { labels: { color: '#d4af37' } },
-          tooltip: { backgroundColor: '#252525', titleColor
+          tooltip: { backgroundColor: '#252525', titleColor: '#d4af37', bodyColor: '#fff' }
+        },
+        animation: { duration: 1000, easing: 'easeInOutQuad' }
+      }
+    });
+
+    // Win vs Loss Count (Pie Chart)
+    const winLossData = filteredTrades.reduce((acc, trade) => {
+      if (trade.pnlNet > 0) acc.win++;
+      else if (trade.pnlNet < 0) acc.loss++;
+      else acc.breakEven++;
+      return acc;
+    }, { win: 0, loss: 0, breakEven: 0 });
+    if (winLossChart) winLossChart.destroy();
+    winLossChart = new Chart(document.getElementById('winLossChart'), {
+      type: 'pie',
+      data: {
+        labels: ['Wins', 'Losses', 'Break-Even'],
+        datasets: [{
+          data: [winLossData.win, winLossData.loss, winLossData.breakEven],
+          backgroundColor: ['#32CD32', '#FF4040', '#d4af37'],
+          borderColor: '#fff',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { color: '#d4af37' } },
+          tooltip: { backgroundColor: '#252525', titleColor: '#d4af37', bodyColor: '#fff' }
+        },
+        animation: { duration: 1000, easing: 'easeInOutQuad' }
+      }
+    });
+
+    // P&L Distribution (Bar Chart)
+    const pnlData = filteredTrades.map(trade => trade.pnlNet);
+    const pnlBins = [-1000, -500, -100, 0, 100, 500, 1000, Infinity];
+    const pnlDistribution = pnlBins.slice(0, -1).map((bin, i) => ({
+      label: `${bin} to ${pnlBins[i + 1] === Infinity ? '∞' : pnlBins[i + 1]}`,
+      count: pnlData.filter(pnl => pnl >= bin && pnl < pnlBins[i + 1]).length
+    }));
+    const pnlLabels = pnlDistribution.map(bin => bin.label);
+    const pnlCounts = pnlDistribution.map(bin => bin.count);
+    if (pnlDistributionChart) pnlDistributionChart.destroy();
+    pnlDistributionChart = new Chart(document.getElementById('pnlDistributionChart'), {
+      type: 'bar',
+      data: {
+        labels: pnlLabels,
+        datasets: [{
+          label: 'P&L Distribution',
+          data: pnlCounts,
+          backgroundColor: (context) => {
+            const index = context.dataIndex;
+            return index < pnlLabels.length / 2 ? 'rgba(255, 99, 132, 0.8)' : 'rgba(50, 205, 50, 0.8)';
+          },
+          borderColor: '#fff',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { title: { display: true, text: 'P&L Range', color: '#d4af37' } },
+          y: { beginAtZero: true, title: { display: true, text: 'Count', color: '#d4af37' }, ticks: { color: '#fff' } }
+        },
+        plugins: {
+          legend: { labels: { color: '#d4af37' } },
+          tooltip: { backgroundColor: '#252525', titleColor: '#d4af37', bodyColor: '#fff' }
+        },
+        animation: { duration: 1000, easing: 'easeInOutQuad' }
+      }
+    });
+  }
+
+  // Toggle views
+  const tableTab = document.getElementById('table-tab');
+  const analyticsTab = document.getElementById('analytics-tab');
+  const tableView = document.getElementById('table-view');
+  const analyticsView = document.getElementById('analytics-view');
+
+  if (tableTab && analyticsTab && tableView && analyticsView) {
+    tableTab.addEventListener('click', () => {
+      tableTab.classList.add('active');
+      analyticsTab.classList.remove('active');
+      tableView.style.display = 'block';
+      analyticsView.style.display = 'none';
+    });
+
+    analyticsTab.addEventListener('click', () => {
+      analyticsTab.classList.add('active');
+      tableTab.classList.remove('active');
+      analyticsView.style.display = 'block';
+      tableView.style.display = 'none';
+      updateCharts();
+    });
+  }
+
+  // Time frame change handler
+  if (timeFrameSelect) {
+    timeFrameSelect.addEventListener('change', () => {
+      updateCharts();
+    });
+  }
+
+  // Sync Modal
+  const syncButton = document.getElementById('sync-mt-button');
+  const closeModal = document.getElementsByClassName('close')[0];
+  const syncForm = document.getElementById('sync-form');
+
+  if (syncButton && closeModal && syncForm) {
+    syncButton.addEventListener('click', () => {
+      if (!metaApi) {
+        initializeMetaApi().then(() => syncModal.classList.remove('hidden'));
+      } else {
+        syncModal.classList.remove('hidden');
+      }
+    });
+    closeModal.addEventListener('click', () => syncModal.classList.add('hidden'));
+    window.addEventListener('click', (e) => {
+      if (e.target === syncModal) syncModal.classList.add('hidden');
+    });
+
+    syncForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (loader) loader.classList.remove('hidden');
+
+      const credentials = {
+        platform: document.getElementById('platform').value,
+        server: document.getElementById('server').value,
+        accountNumber: document.getElementById('accountNumber').value,
+        password: document.getElementById('password').value,
+        nickname: document.getElementById('nickname').value,
+      };
+      localStorage.setItem('mtCredentials', btoa(JSON.stringify(credentials)));
+
+      try {
+        if (!metaApi) await initializeMetaApi();
+        account = await metaApi.metatraderAccountApi.getAccount('your-account-id'); // Replace with your MetaAPI account ID
+        await account.waitSynchronized();
+        const trades = await account.get
+        Positions();
+        const tradeDataArray = trades.map(trade => ({
+          date: new Date(trade.time).toISOString().split('T')[0],
+          symbol: trade.symbol,
+          assetType: 'Forex', // Adjust based on your needs
+          buySell: trade.type === 'BUY' ? 'Buy' : 'Sell',
+          entryPrice: trade.entryPrice,
+          exitPrice: trade.currentPrice || 0,
+          takeProfit: trade.stopLossPrice || 0,
+          stopLoss: trade.takeProfitPrice || 0,
+          pnlNet: trade.profit || 0,
+          positionSize: trade.volume,
+          strategyName: '',
+          notes: ''
+        }));
+
+        // Save trades to worker
+        for (const tradeData of tradeDataArray) {
+          await fetch(workerUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'writeTrade', tradeData })
+          });
+        }
+
+        if (notification) {
+          notification.textContent = 'Trades Synced Successfully';
+          notification.classList.remove('hidden');
+          setTimeout(() => notification.classList.add('hidden'), 3000);
+        }
+        syncModal.classList.add('hidden');
+        loadTrades();
+        updateCharts();
+      } catch (error) {
+        alert('Error syncing trades: ' + error.message);
+        console.error('Sync Error:', error);
+      } finally {
+        if (loader) loader.classList.add('hidden');
+      }
+    });
+  }
+
+  // Export Table CSV
+  if (exportTableCsv) {
+    exportTableCsv.addEventListener('click', async () => {
+      const trades = await loadTrades();
+      const csv = [
+        ['Date,Symbol,Asset Type,Buy/Sell,Entry Price,Exit Price,Take Profit,Stop Loss,P&L Net,Position Size,Strategy Name,Notes'],
+        ...trades.map(trade =>
+          `${trade.date || ''},${trade.symbol || ''},${trade.assetType || ''},${trade.buySell || ''},${trade.entryPrice.toFixed(5)},${trade.exitPrice.toFixed(5)},${trade.takeProfit.toFixed(5)},${trade.stopLoss.toFixed(5)},${trade.pnlNet.toFixed(2)},${trade.positionSize.toFixed(2)},${trade.strategyName || ''},${trade.notes || ''}`
+        )
+      ].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'trade_journal.csv';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    });
+  }
+
+  // Export Analytics CSV (Time-Based P&L)
+  if (exportAnalyticsCsv) {
+    exportAnalyticsCsv.addEventListener('click', async () => {
+      const trades = await loadTrades();
+      const timePnlData = trades.reduce((acc, trade) => {
+        const date = trade.date;
+        acc[date] = (acc[date] || 0) + trade.pnlNet;
+        return acc;
+      }, {});
+      const timeLabels = Object.keys(timePnlData).sort();
+      const timeData = timeLabels.map(date => timePnlData[date]);
+      const csv = [
+        ['Date,P&L'],
+        ...timeLabels.map((date, index) => `${date},${timeData[index].toFixed(2)}`)
+      ].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'analytics_pnl.csv';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    });
+  }
+
+  // Initial load
+  loadTrades();
+  if (analyticsTab && analyticsTab.classList.contains('active')) updateCharts();
+});
