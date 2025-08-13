@@ -222,6 +222,23 @@ tbody tr:hover {
   font-weight: 600;
 }
 
+.time-frame-selector {
+  margin-bottom: 20px;
+}
+
+.time-frame-selector label {
+  color: #d4af37;
+  margin-right: 10px;
+}
+
+.time-frame-selector select {
+  padding: 10px;
+  border: 2px solid #d4af37;
+  background-color: #333;
+  color: #fff;
+  border-radius: 8px;
+}
+
 .loader {
   position: fixed;
   top: 50%;
@@ -334,5 +351,9 @@ tbody tr:hover {
   }
   .analytics-grid {
     grid-template-columns: 1fr;
+  }
+  .action-buttons {
+    flex-direction: column;
+    gap: 10px;
   }
 }
